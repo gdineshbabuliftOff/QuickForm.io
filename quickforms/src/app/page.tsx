@@ -127,6 +127,12 @@ const HorizontalScrollSection = () => {
                                 <h3 className="text-white text-2xl font-bold">{template.title}</h3>
                                 <p className="text-white/80 mt-2">{template.description}</p>
                             </div>
+                            {/* --- ADDED: Hover button --- */}
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <Link href={`/templates/${template.id}`} className="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-indigo-500 transition-all transform hover:scale-105">
+                                    Use Template
+                                </Link>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -256,7 +262,7 @@ export default function App() {
           <div className="container mx-auto px-6">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-extrabold text-white">Everything you need. Nothing you don’t.</h2>
-              <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">From creation to analysis, we've got you covered.</p>
+              <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">From creation to analysis, we&apos;ve got you covered.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {features.map((feature) => (
