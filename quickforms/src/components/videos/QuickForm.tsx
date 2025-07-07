@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, FC, ReactNode } from 'react';
 
-const VideoStyles = () => (
+const VideoStyles: FC = () => (
     <style>{`
         .scene {
             animation: fadeIn 0.8s ease-in-out;
@@ -36,7 +36,6 @@ const VideoStyles = () => (
 
         .slide-in-bottom {
             animation: slideInBottom 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-            opacity: 0;
         }
         @keyframes slideInBottom {
             from { transform: translateY(50px); opacity: 0; }
@@ -142,12 +141,12 @@ const VideoStyles = () => (
     `}</style>
 );
 
-function ConfettiPiece() {
+const ConfettiPiece: FC = () => {
     const colors = ['#f43f5e', '#8b5cf6', '#14b8a6', '#f59e0b'];
     return <div className="confetti" style={{ backgroundColor: colors[Math.floor(Math.random() * colors.length)], left: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 0.2}s` }}></div>;
 }
 
-function BoringFormsScene() {
+const BoringFormsScene: FC = () => {
     return (
         <div className="scene w-full h-full flex flex-col items-center justify-center bg-gray-200 p-8 overflow-hidden">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-700 mb-8 text-center fade-in">Tired of boring, generic forms?</h2>
@@ -172,7 +171,7 @@ function BoringFormsScene() {
     );
 }
 
-function DragAndDropScene() {
+const DragAndDropScene: FC = () => {
     return (
         <div className="scene w-full h-full flex flex-col items-center justify-center bg-white p-8 overflow-hidden">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-8 text-center fade-in">Build with a simple drag & drop.</h2>
@@ -192,13 +191,13 @@ function DragAndDropScene() {
     );
 }
 
-function LivePreviewScene() {
+const LivePreviewScene: FC = () => {
     const [buttonColor, setButtonColor] = useState('bg-indigo-600');
     const colors = ['bg-indigo-600', 'bg-pink-500', 'bg-teal-500', 'bg-gray-800'];
     useEffect(() => {
         const interval = setInterval(() => { setButtonColor(prev => colors[(colors.indexOf(prev) + 1) % colors.length]); }, 1200);
         return () => clearInterval(interval);
-    }, []);
+    }, [colors]);
 
     return (
         <div className="scene w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 p-8">
@@ -226,7 +225,7 @@ function LivePreviewScene() {
     );
 }
 
-function InteractiveScene() {
+const InteractiveScene: FC = () => {
     const [isSubmitted, setIsSubmitted] = useState(false);
     useEffect(() => {
         const timer = setTimeout(() => setIsSubmitted(true), 2000);
@@ -251,14 +250,14 @@ function InteractiveScene() {
     );
 }
 
-function TemplateGalleryScene() {
+const TemplateGalleryScene: FC = () => {
     return (
         <div className="scene w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-100 p-8 overflow-hidden">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-8 text-center slide-in-bottom">Start with a Stunning Template.</h2>
             <div className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="template-card slide-in-bottom" style={{ animationDelay: '0.2s' }}>
                     <div className="p-4 w-full">
-                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center"><p className="text-red-500">✉️</p></div>
+                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center"><span role="img" aria-label="Mailbox">✉️</span></div>
                         <div className="w-full h-2 bg-gray-200 rounded-full mt-4"></div>
                         <div className="w-2/3 h-2 bg-gray-200 rounded-full mt-2"></div>
                     </div>
@@ -266,7 +265,7 @@ function TemplateGalleryScene() {
                 </div>
                 <div className="template-card template-card-active slide-in-bottom" style={{ animationDelay: '0.4s' }}>
                     <div className="p-4 w-full">
-                         <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center"><p className="text-indigo-500">📅</p></div>
+                         <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center"><span role="img" aria-label="Calendar">📅</span></div>
                         <div className="w-full h-2 bg-indigo-200 rounded-full mt-4"></div>
                         <div className="w-2/3 h-2 bg-indigo-200 rounded-full mt-2"></div>
                     </div>
@@ -274,7 +273,7 @@ function TemplateGalleryScene() {
                 </div>
                 <div className="template-card slide-in-bottom" style={{ animationDelay: '0.6s' }}>
                     <div className="p-4 w-full">
-                         <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center"><p className="text-teal-500">💼</p></div>
+                         <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center"><span role="img" aria-label="Briefcase">💼</span></div>
                         <div className="w-full h-2 bg-gray-200 rounded-full mt-4"></div>
                         <div className="w-2/3 h-2 bg-gray-200 rounded-full mt-2"></div>
                     </div>
@@ -282,7 +281,7 @@ function TemplateGalleryScene() {
                 </div>
                 <div className="template-card slide-in-bottom" style={{ animationDelay: '0.8s' }}>
                    <div className="p-4 w-full">
-                         <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center"><p className="text-amber-500">⭐</p></div>
+                         <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center"><span role="img" aria-label="Star">⭐</span></div>
                         <div className="w-full h-2 bg-gray-200 rounded-full mt-4"></div>
                         <div className="w-2/3 h-2 bg-gray-200 rounded-full mt-2"></div>
                     </div>
@@ -293,7 +292,7 @@ function TemplateGalleryScene() {
     );
 }
 
-function AnalyticsScene() {
+const AnalyticsScene: FC = () => {
     return (
         <div className="scene w-full h-full flex flex-col items-center justify-center bg-gray-900 p-8 overflow-hidden">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 text-center fade-in">Track Your Results with Ease.</h2>
@@ -314,7 +313,7 @@ function AnalyticsScene() {
     );
 }
 
-function AdvancedLogicScene() {
+const AdvancedLogicScene: FC = () => {
     return (
         <div className="scene w-full h-full flex flex-col items-center justify-center bg-white p-8">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 text-center fade-in">Create smart, dynamic forms.</h2>
@@ -337,7 +336,7 @@ function AdvancedLogicScene() {
     );
 }
 
-function CollaborationScene() {
+const CollaborationScene: FC = () => {
     return (
         <div className="scene w-full h-full flex flex-col items-center justify-center bg-gray-900 p-8">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-10 text-center fade-in">Work together, faster.</h2>
@@ -356,7 +355,12 @@ function CollaborationScene() {
     );
 }
 
-const scenes = [
+interface Scene {
+    duration: number;
+    content: ReactNode;
+}
+
+const scenes: Scene[] = [
     {
         duration: 2500,
         content: (
@@ -425,7 +429,7 @@ const scenes = [
                     <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter">QuickForm<span className="text-indigo-400">.</span>io</h1>
                 </div>
                 <div className="mt-12 fade-in" style={{ animationDelay: '1.5s' }}>
-                    <a href="#" className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 px-10 text-xl rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300 inline-block pulse-ring">
+                    <a href="/signup" className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 px-10 text-xl rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300 inline-block pulse-ring">
                         Sign Up Free
                     </a>
                 </div>
@@ -434,9 +438,9 @@ const scenes = [
     }
 ];
 
-export default function QuickFormVideo() {
+const QuickFormVideo: FC = () => {
     const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
-    const sceneTimeoutRef = useRef(null);
+    const sceneTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         if (sceneTimeoutRef.current) {
@@ -446,7 +450,11 @@ export default function QuickFormVideo() {
             setCurrentSceneIndex(prevIndex => (prevIndex + 1) % scenes.length);
         }, scenes[currentSceneIndex].duration);
 
-        return () => clearTimeout(sceneTimeoutRef.current);
+        return () => {
+            if (sceneTimeoutRef.current) {
+                clearTimeout(sceneTimeoutRef.current);
+            }
+        };
     }, [currentSceneIndex]);
 
     return (
@@ -460,3 +468,5 @@ export default function QuickFormVideo() {
         </div>
     );
 }
+
+export default QuickFormVideo;

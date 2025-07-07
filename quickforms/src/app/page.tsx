@@ -1,15 +1,29 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, FC, ReactNode, JSX } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import QuickFormVideo from '@/components/QuickForm';
+import QuickFormVideo from '@/components/videos/QuickForm';
+import { useAuth } from '@/hooks/useAuth'; // Import the auth hook
+import { auth } from '@/lib/firebase'; // Import firebase auth for logout
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
-// --- Icon Creation Utility ---
-const createIcon = (path) => ({
+interface IconProps {
+  color?: string;
+  size?: number | string;
+  strokeWidth?: number | string;
+  className?: string;
+}
+
+type IconPathTuple = [keyof JSX.IntrinsicElements, { [key: string]: any }];
+
+const createIcon = (path: IconPathTuple[]) => ({
   displayName,
-}) => {
-  const Component = React.forwardRef(
+}: {
+  displayName: string;
+}): FC<IconProps> => {
+  const Component = React.forwardRef<SVGSVGElement, IconProps>(
     ({ color = 'currentColor', size = 24, strokeWidth = 2, className, ...rest }, ref) => (
       React.createElement('svg', {
         ref,
@@ -24,14 +38,13 @@ const createIcon = (path) => ({
         strokeLinecap: 'round',
         strokeLinejoin: 'round',
         ...rest,
-      }, path.map(([tag, attrs]) => React.createElement(tag, { key: attrs.key, ...attrs })))
+      }, path.map(([tag, attrs], index) => React.createElement(tag, { key: attrs.key || index, ...attrs })))
     )
   );
   Component.displayName = `LucideIcon(${displayName})`;
   return Component;
 };
 
-// --- Icon Definitions ---
 const Share2Icon = createIcon([
   ['circle', { cx: '18', cy: '5', r: '3', key: '1y29k1' }],
   ['circle', { cx: '6', cy: '12', r: '3', key: '12g9s1' }],
@@ -52,15 +65,34 @@ const MousePointerClickIcon = createIcon([
     ['path', { d: 'm11 11 4 4', key: '1x7e1j' }],
 ])({ displayName: 'MousePointerClick' });
 
-// --- Dynamic Feature Card Component with Mouse-aware Glow ---
-const FeatureCard = ({ icon, title, description }) => {
-    const cardRef = useRef(null);
+interface FeatureCardProps {
+  icon: ReactNode;
+  title: string;
+  description: string;
+}
+
+interface FormTemplate {
+    id: number;
+    title: string;
+    description: string;
+    imageUrl: string;
+}
+
+interface Feature {
+    id: string;
+    icon: ReactNode;
+    title: string;
+    description: string;
+}
+
+const FeatureCard: FC<FeatureCardProps> = ({ icon, title, description }) => {
+    const cardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const card = cardRef.current;
         if (!card) return;
 
-        const handleMouseMove = (e) => {
+        const handleMouseMove = (e: MouseEvent) => {
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
@@ -73,7 +105,7 @@ const FeatureCard = ({ icon, title, description }) => {
     }, []);
 
     return (
-        <div ref={cardRef} className="feature-card bg-gray-800/50 p-8 rounded-2xl text-left transition-all duration-300 relative overflow-hidden border border-white/10">
+        <div ref={cardRef} className="feature-card bg-gray-800/50 p-8 rounded-2xl text-left transition-all duration-300 relative overflow-hidden border border-white/10 h-full">
             <div className="relative z-10">
                 <div className="inline-block bg-gray-700/80 p-4 rounded-xl mb-6">
                     {icon}
@@ -85,10 +117,8 @@ const FeatureCard = ({ icon, title, description }) => {
     );
 };
 
-// --- Corrected Horizontal Scroll Section with Automatic Scrolling ---
-const HorizontalScrollSection = () => {
-    // ADDED: More templates for a richer list.
-    const formTemplates = [
+const HorizontalScrollSection: FC = () => {
+    const formTemplates: FormTemplate[] = [
         { id: 1, title: 'Event Registration', description: 'Capture attendee details seamlessly.', imageUrl: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=800&auto=format&fit=crop' },
         { id: 2, title: 'Customer Feedback', description: 'Gather valuable insights.', imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=800&auto=format&fit=crop' },
         { id: 3, title: 'Job Application', description: 'Streamline your hiring process.', imageUrl: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=800&auto=format&fit=crop' },
@@ -101,8 +131,7 @@ const HorizontalScrollSection = () => {
         { id: 10, title: 'Request a Quote', description: 'Generate leads for your business.', imageUrl: 'https://images.unsplash.com/photo-1554224155-1696413565d3?q=80&w=800&auto=format&fit=crop'},
     ];
 
-    // Create a duplicated list for a seamless loop
-    const duplicatedTemplates = [...formTemplates, ...formTemplates];
+    const duplicatedTemplates: FormTemplate[] = [...formTemplates, ...formTemplates];
 
     return (
         <div id="templates" className="relative py-20 md:py-28 bg-gray-900 overflow-hidden">
@@ -111,7 +140,6 @@ const HorizontalScrollSection = () => {
                 <h2 className="text-3xl md:text-5xl font-extrabold text-white">Start with a Proven Template</h2>
                 <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">Why start from scratch? Choose from our library of beautifully designed forms that are proven to convert.</p>
             </div>
-            {/* The outer div masks the scrolling content */}
             <div className="scroll-container-mask">
                 <div className="scroll-container flex gap-8 px-4">
                     {duplicatedTemplates.map((template, index) => (
@@ -119,15 +147,15 @@ const HorizontalScrollSection = () => {
                             <Image
                                 src={template.imageUrl}
                                 alt={template.title}
-                                layout="fill"
-                                className="object-cover w-full h-full transition-all duration-500 ease-out group-hover:scale-110"
+                                fill
+                                style={{ objectFit: 'cover' }}
+                                className="w-full h-full transition-all duration-500 ease-out group-hover:scale-110"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
                             <div className="absolute inset-0 p-6 flex flex-col justify-end">
                                 <h3 className="text-white text-2xl font-bold">{template.title}</h3>
                                 <p className="text-white/80 mt-2">{template.description}</p>
                             </div>
-                            {/* --- ADDED: Hover button --- */}
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <Link href={`/templates/${template.id}`} className="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-indigo-500 transition-all transform hover:scale-105">
                                     Use Template
@@ -141,11 +169,18 @@ const HorizontalScrollSection = () => {
     );
 };
 
-export default function App() {
-  const [isScrolled, setIsScrolled] = useState(false);
+export default function App(): JSX.Element {
+  const [isScrolled, setIsScrolled] = useState<boolean>(false);
+  const { user, loading } = useAuth(); // Use the auth hook
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login'); // Redirect to login after logout
+  };
 
   useEffect(() => {
-    const handleScroll = () => {
+    const handleScroll = (): void => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
@@ -154,15 +189,14 @@ export default function App() {
     };
   }, []);
 
-  const features = [
-    { id: 'feature-builder', icon: <MousePointerClickIcon className="h-8 w-8 text-indigo-400" />, title: 'Intuitive Drag & Drop Builder', description: 'Create any form you can imagine. Just drag, drop, and you\'re done. No code required, ever.' },
+  const features: Feature[] = [
+    { id: 'feature-builder', icon: <MousePointerClickIcon className="h-8 w-8 text-indigo-400" />, title: 'Intuitive Drag & Drop Builder', description: "Create any form you can imagine. Just drag, drop, and you're done. No code required, ever." },
     { id: 'feature-sharing', icon: <Share2Icon className="h-8 w-8 text-indigo-400" />, title: 'Seamless Sharing & Embedding', description: 'Share your form with a link or embed it directly into your website with a single line of code.' },
     { id: 'feature-analytics', icon: <BarChart2Icon className="h-8 w-8 text-indigo-400" />, title: 'Powerful, Real-time Analytics', description: 'Track submissions, view rates, and conversion rates in real-time to understand your audience better.' },
   ];
 
   return (
     <>
-    {/* MODIFIED: Replaced scroll-snap with a continuous animation */}
     <style jsx global>{`
         @keyframes animated-gradient {
             0% { background-position: 0% 50%; }
@@ -174,27 +208,20 @@ export default function App() {
             background-image: linear-gradient(315deg, rgba(88, 80, 236, 0.15) 0%, rgba(30,30,40,0) 30%, rgba(139, 92, 246, 0.1) 70%, rgba(30,30,40,0) 100%);
             animation: animated-gradient 20s ease infinite;
         }
-
-        /* --- New styles for automatic scrolling carousel --- */
         @keyframes scrollLeft {
             0% { transform: translateX(0); }
-            /* Card width (w-80 -> 20rem) + gap (gap-8 -> 2rem) = 22rem = 352px */
-            /* 10 cards * 352px = 3520px */
             100% { transform: translateX(calc(-22rem * 10)); }
         }
         .scroll-container-mask {
             overflow: hidden;
         }
         .scroll-container {
-            /* 20 cards (10 original + 10 duplicates) */
             width: calc(22rem * 20);
             animation: scrollLeft 50s linear infinite;
         }
         .scroll-container:hover {
             animation-play-state: paused;
         }
-        /* -------------------------------------------------- */
-
         .feature-card::before {
             content: '';
             position: absolute;
@@ -223,10 +250,23 @@ export default function App() {
             <Link href="/resources" className="text-gray-300 hover:text-indigo-400 transition-colors">Resources</Link>
           </nav>
           <div className="flex items-center space-x-2">
-            <Link href="/login" className="hidden md:inline-block text-gray-300 hover:text-indigo-400 px-4 py-2 rounded-md transition-colors">Log In</Link>
-            <Link href="/signup" className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:bg-indigo-500 transition-all duration-300 font-semibold">
-              Sign Up Free
-            </Link>
+            {!loading && (
+              user ? (
+                <>
+                  <button onClick={handleLogout} className="hidden md:inline-block text-gray-300 hover:text-indigo-400 px-4 py-2 rounded-md transition-colors">Log Out</button>
+                  <Link href="/dashboard" className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:bg-indigo-500 transition-all duration-300 font-semibold">
+                    Go to Dashboard
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="hidden md:inline-block text-gray-300 hover:text-indigo-400 px-4 py-2 rounded-md transition-colors">Log In</Link>
+                  <Link href="/signup" className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:bg-indigo-500 transition-all duration-300 font-semibold">
+                    Sign Up Free
+                  </Link>
+                </>
+              )
+            )}
           </div>
         </div>
       </header>
@@ -243,9 +283,17 @@ export default function App() {
                 Tired of clunky form builders? QuickForm empowers you to create stunning, responsive forms that people actually enjoy filling out.
               </p>
               <div className="mt-10">
-                <Link href="/signup" className="bg-indigo-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-105 inline-block">
-                  Create Your First Form — Free
-                </Link>
+                {!loading && (
+                  user ? (
+                    <Link href="/dashboard" className="bg-indigo-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-105 inline-block">
+                      Go to Your Dashboard
+                    </Link>
+                  ) : (
+                    <Link href="/signup" className="bg-indigo-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-105 inline-block">
+                      Create Your First Form — Free
+                    </Link>
+                  )
+                )}
               </div>
             </div>
             <div className="mt-16 max-w-5xl mx-auto">
@@ -277,13 +325,15 @@ export default function App() {
                 <div className="bg-gray-800/60 border border-white/10 rounded-3xl p-8 md:p-12 max-w-4xl mx-auto backdrop-blur-sm">
                     <div className="grid md:grid-cols-3 gap-8 items-center">
                         <div className="md:col-span-1 flex justify-center">
-                            <Image
-                                src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=300&h=300&auto=format&fit=crop"
-                                alt="Avatar of G Dinesh Babu"
-                                width={160}
-                                height={160}
-                                className="rounded-full shadow-2xl ring-4 ring-indigo-500/40" 
-                            />
+                            <a href="https://i.ibb.co/BHHgMLVZ/download.jpg" target="_blank" rel="noopener noreferrer">
+                                <Image
+                                    src="https://i.ibb.co/BHHgMLVZ/download.jpg"
+                                    alt="Avatar of G Dinesh Babu"
+                                    width={160}
+                                    height={160}
+                                    className="rounded-full shadow-2xl ring-4 ring-indigo-500/40" 
+                                />
+                            </a>
                         </div>
                         <div className="md:col-span-2 text-center md:text-left">
                             <p className="text-2xl font-light text-white italic">
@@ -291,7 +341,7 @@ export default function App() {
                             </p>
                             <div className="mt-6">
                                 <p className="font-bold text-lg text-white">G Dinesh Babu</p>
-                                <p className="text-indigo-400">Lead Developer, FusionCraft</p>
+                                <p className="text-indigo-400">Lead Developer</p>
                             </div>
                         </div>
                     </div>
@@ -307,9 +357,17 @@ export default function App() {
                 Join thousands of businesses building smarter, more beautiful forms. Get started for free—no credit card required.
               </p>
               <div className="mt-10">
-                <Link href="/signup" className="bg-indigo-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-indigo-500 transition-transform transform hover:scale-105 inline-block">
-                    Sign Up and Build for Free
-                </Link>
+                {!loading && (
+                  user ? (
+                    <Link href="/dashboard" className="bg-indigo-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-indigo-500 transition-transform transform hover:scale-105 inline-block">
+                        Go to Your Dashboard
+                    </Link>
+                  ) : (
+                    <Link href="/signup" className="bg-indigo-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-indigo-500 transition-transform transform hover:scale-105 inline-block">
+                        Sign Up and Build for Free
+                    </Link>
+                  )
+                )}
               </div>
             </div>
           </div>
