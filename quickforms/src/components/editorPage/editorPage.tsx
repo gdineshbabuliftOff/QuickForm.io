@@ -10,7 +10,6 @@ import QuickFormLoader from '../loaders/quickFormloader';
 const useHistory = <T,>(initialState: T): [T, (action: T | ((prevState: T) => T), overwrite?: boolean) => void, () => void, () => void, boolean, boolean] => {
     const [state, setStateInternal] = useState({ history: [initialState], index: 0 });
     const { history, index } = state;
-
     const setState = useCallback((action: T | ((prevState: T) => T), overwrite = false) => {
         setStateInternal(currentState => {
             const newState = typeof action === 'function' ? (action as (prevState: T) => T)(currentState.history[currentState.index]) : action;
@@ -25,7 +24,6 @@ const useHistory = <T,>(initialState: T): [T, (action: T | ((prevState: T) => T)
             }
         });
     }, []);
-
     const undo = useCallback(() => {
         setStateInternal(currentState => {
             if (currentState.index > 0) {
@@ -34,7 +32,6 @@ const useHistory = <T,>(initialState: T): [T, (action: T | ((prevState: T) => T)
             return currentState;
         });
     }, []);
-
     const redo = useCallback(() => {
         setStateInternal(currentState => {
             if (currentState.index < currentState.history.length - 1) {
@@ -43,13 +40,10 @@ const useHistory = <T,>(initialState: T): [T, (action: T | ((prevState: T) => T)
             return currentState;
         });
     }, []);
-
     const canUndo = index > 0;
     const canRedo = index < history.length - 1;
-
     return [history[index], setState, undo, redo, canUndo, canRedo];
 };
-
 interface IconProps { color?: string; size?: number | string; strokeWidth?: number | string; className?: string; }
 type IconPathTuple = [keyof JSX.IntrinsicElements, { [key: string]: any }];
 type FieldType = 'text' | 'email' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'heading' | 'paragraph' | 'date' | 'file' | 'signature' | 'section' | 'hr' | 'ordered-list' | 'unordered-list';
@@ -59,108 +53,23 @@ type ConditionOperator = 'equals' | 'not_equals' | 'contains' | 'is_empty' | 'is
 type TextAlign = 'left' | 'center' | 'right';
 type ConditionLogic = 'and' | 'or';
 type ListStyleType = 'disc' | 'circle' | 'square' | 'none';
-
-interface NotificationType {
-    message: string;
-    type: 'success' | 'error';
-    visible: boolean;
-}
-
+interface NotificationType { message: string; type: 'success' | 'error'; visible: boolean; }
 interface CustomStyle { name: string; value: string; }
 interface ResponsiveStyles { width?: FieldWidth; fontSize?: string; }
-
-interface FieldStyles {
-    color?: string;
-    backgroundColor?: string;
-    borderColor?: string;
-    fontSize?: string;
-    fontWeight?: string;
-    textAlign?: TextAlign;
-    padding?: string;
-    listStyleType?: ListStyleType;
-    custom?: CustomStyle[];
-    desktop: ResponsiveStyles;
-    tablet: ResponsiveStyles;
-    mobile: ResponsiveStyles;
-}
-
-interface FieldOption {
-    label: string;
-    value: string;
-}
-
-interface FieldCondition {
-    id: string;
-    fieldId: string;
-    operator: ConditionOperator;
-    value: string;
-}
-
-interface RequiredCondition {
-    enabled: boolean;
-    logic: ConditionLogic;
-    conditions: FieldCondition[];
-}
-
-interface FormField {
-    id: string;
-    type: FieldType;
-    label: string;
-    width: FieldWidth;
-    name?: string;
-    fieldId?: string;
-    placeholder?: string;
-    value?: string;
-    required?: boolean;
-    requiredConditions?: RequiredCondition;
-    options?: FieldOption[];
-    layout?: 'vertical' | 'horizontal';
-    styles: FieldStyles;
-    conditions?: FieldCondition[];
-    conditionLogic?: ConditionLogic;
-    fields?: FormField[];
-}
-
-interface FormStyles {
-    backgroundType: 'color' | 'image';
-    backgroundColor: string;
-    backgroundImage: string;
-    textColor: string;
-    fieldBackgroundColor: string;
-    fieldBorderColor: string;
-    buttonBackgroundColor: string;
-    buttonTextColor: string;
-    buttonText: string;
-    buttonPosition: 'left' | 'center' | 'right';
-    buttonWidth: string;
-    buttonHeight: string;
-    gap: number;
-}
-
-interface FormSettings {
-    prefillFromAPI: boolean;
-    prefillApiUrl: string;
-    postOnSubmit: boolean;
-    postApiUrl: string;
-}
-
-interface Form {
-    id: string;
-    title: string;
-    fields: FormField[];
-    styles: FormStyles;
-    settings: FormSettings;
-    hasPublishedVersion?: boolean;
-}
-
+interface FieldStyles { color?: string; backgroundColor?: string; borderColor?: string; fontSize?: string; fontWeight?: string; textAlign?: TextAlign; padding?: string; listStyleType?: ListStyleType; custom?: CustomStyle[]; desktop: ResponsiveStyles; tablet: ResponsiveStyles; mobile: ResponsiveStyles; }
+interface FieldOption { label: string; value: string; }
+interface FieldCondition { id: string; fieldId: string; operator: ConditionOperator; value: string; }
+interface RequiredCondition { enabled: boolean; logic: ConditionLogic; conditions: FieldCondition[]; }
+interface FormField { id: string; type: FieldType; label: string; width: FieldWidth; name?: string; fieldId?: string; placeholder?: string; value?: string; required?: boolean; requiredConditions?: RequiredCondition; options?: FieldOption[]; layout?: 'vertical' | 'horizontal'; styles: FieldStyles; conditions?: FieldCondition[]; conditionLogic?: ConditionLogic; fields?: FormField[]; }
+interface FormStyles { backgroundType: 'color' | 'image'; backgroundColor: string; backgroundImage: string; textColor: string; fieldBackgroundColor: string; fieldBorderColor: string; buttonBackgroundColor: string; buttonTextColor: string; buttonText: string; buttonPosition: 'left' | 'center' | 'right'; buttonWidth: string; buttonHeight: string; gap: number; }
+interface FormSettings { prefillFromAPI: boolean; prefillApiUrl: string; postOnSubmit: boolean; postApiUrl: string; }
+interface Form { id: string; title: string; fields: FormField[]; styles: FormStyles; settings: FormSettings; hasPublishedVersion?: boolean; }
 const toCamelCase = (str: string) => str.replace(/-./g, x => x[1].toUpperCase());
-
 const createIcon = (path: IconPathTuple[]): (({ displayName }: { displayName: string; }) => FC<IconProps>) => ({ displayName }: { displayName: string; }) => {
     const Component = React.forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 24, strokeWidth = 2, className, ...rest }, ref) => React.createElement('svg', { ref, width: size, height: size, stroke: color, strokeWidth, className: ['lucide', `lucide-${displayName.toLowerCase()}`, className].filter(Boolean).join(' '), xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 24 24', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', ...rest }, path.map(([tag, attrs], i) => React.createElement(tag, { key: attrs.key || i, ...attrs }))));
     Component.displayName = `LucideIcon(${displayName})`;
     return Component;
 };
-
 const TypeIcon = createIcon([['path', { d: "M4 7V4h16v3" }], ['path', { d: "M9 20h6" }], ['path', { d: "M12 4v16" }]])({ displayName: 'Type' });
 const MailIcon = createIcon([['rect', { width: "20", height: "16", x: "2", y: "4", rx: "2" }], ['path', { d: "m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" }]])({ displayName: 'Mail' });
 const TextareaIcon = createIcon([['path', { d: "M3 12h18" }], ['path', { d: "M3 6h18" }], ['path', { d: "M3 18h18" }]])({ displayName: 'Textarea' });
@@ -195,6 +104,8 @@ const Share2Icon = createIcon([['circle', { cx: "18", cy: "5", r: "3" }], ['circ
 const MoreVerticalIcon = createIcon([['circle', { cx: "12", cy: "12", r: "1" }], ['circle', { cx: "12", cy: "5", r: "1" }], ['circle', { cx: "12", cy: "19", r: "1" }]])({ displayName: 'MoreVertical' });
 const HistoryIcon = createIcon([['path', { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }], ['path', { d: "M3 3v5h5" }], ['path', { d: "M12 7v5l4 2" }]])({ displayName: 'History' });
 const XIcon = createIcon([['path', { d: "M18 6 6 18" }], ['path', { d: "m6 6 12 12" }]])({ displayName: 'X' });
+const RotateCcwIcon = createIcon([['path', { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }], ['path', { d: "M3 3v5h5" }]])({ displayName: 'RotateCcw' });
+const SlidersHorizontalIcon = createIcon([['line', { x1: '21', y1: '4', x2: '14', y2: '4' }], ['line', { x1: '10', y1: '4', x2: '3', y2: '4' }], ['line', { x1: '21', y1: '12', x2: '12', y2: '12' }], ['line', { x1: '8', y1: '12', x2: '3', y2: '12' }], ['line', { x1: '21', y1: '20', x2: '16', y2: '20' }], ['line', { x1: '12', y1: '20', x2: '3', y2: '20' }], ['line', { x1: '14', y1: '2', x2: '14', y2: '6' }], ['line', { x1: '8', y1: '10', x2: '8', y2: '14' }], ['line', { x1: '16', y1: '18', x2: '16', y2: '22' }]])({ displayName: 'SlidersHorizontal' });
 
 const Accordion: FC<{ title: string; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, children, defaultOpen = false }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -211,13 +122,8 @@ const Accordion: FC<{ title: string; children: React.ReactNode; defaultOpen?: bo
 
 const Notification: FC<{ notification: NotificationType; onClose: () => void }> = ({ notification, onClose }) => {
     if (!notification.visible) return null;
-
     const baseClasses = "fixed top-5 right-5 z-50 p-4 rounded-lg shadow-lg text-white flex items-center";
-    const typeClasses = {
-        success: "bg-green-600/90",
-        error: "bg-red-600/90",
-    };
-
+    const typeClasses = { success: "bg-green-600/90", error: "bg-red-600/90" };
     return (
         <div className={`${baseClasses} ${typeClasses[notification.type]}`}>
             <span className="mr-3">{notification.message}</span>
@@ -227,58 +133,23 @@ const Notification: FC<{ notification: NotificationType; onClose: () => void }> 
 };
 
 const fieldTypes: { type: FieldType; label: string; icon: FC<IconProps> }[] = [
-    { type: 'section', label: 'Section', icon: SectionIcon },
-    { type: 'heading', label: 'Heading', icon: Heading1Icon },
-    { type: 'paragraph', label: 'Paragraph', icon: PilcrowIcon },
-    { type: 'ordered-list', label: 'Ordered List', icon: ListOrderedIcon },
-    { type: 'unordered-list', label: 'Unordered List', icon: ListIcon },
-    { type: 'text', label: 'Text Input', icon: TypeIcon },
-    { type: 'email', label: 'Email', icon: MailIcon },
-    { type: 'textarea', label: 'Text Area', icon: TextareaIcon },
-    { type: 'select', label: 'Dropdown', icon: ChevronDownIcon },
-    { type: 'checkbox', label: 'Checkbox', icon: CheckSquareIcon },
-    { type: 'radio', label: 'Radio Group', icon: RadioTowerIcon },
-    { type: 'date', label: 'Date Picker', icon: CalendarIcon },
-    { type: 'file', label: 'File Upload', icon: FileUpIcon },
-    { type: 'signature', label: 'Signature', icon: SignatureIcon },
-    { type: 'hr', label: 'Horizontal Line', icon: HrIcon },
+    { type: 'section', label: 'Section', icon: SectionIcon }, { type: 'heading', label: 'Heading', icon: Heading1Icon }, { type: 'paragraph', label: 'Paragraph', icon: PilcrowIcon }, { type: 'ordered-list', label: 'Ordered List', icon: ListOrderedIcon }, { type: 'unordered-list', label: 'Unordered List', icon: ListIcon }, { type: 'text', label: 'Text Input', icon: TypeIcon }, { type: 'email', label: 'Email', icon: MailIcon }, { type: 'textarea', label: 'Text Area', icon: TextareaIcon }, { type: 'select', label: 'Dropdown', icon: ChevronDownIcon }, { type: 'checkbox', label: 'Checkbox', icon: CheckSquareIcon }, { type: 'radio', label: 'Radio Group', icon: RadioTowerIcon }, { type: 'date', label: 'Date Picker', icon: CalendarIcon }, { type: 'file', label: 'File Upload', icon: FileUpIcon }, { type: 'signature', label: 'Signature', icon: SignatureIcon }, { type: 'hr', label: 'Horizontal Line', icon: HrIcon },
 ];
 
-const defaultStyles: FormStyles = {
-    backgroundType: 'color', backgroundColor: '#FFFFFF', backgroundImage: '', textColor: '#000000',
-    fieldBackgroundColor: 'transparent', fieldBorderColor: '#D1D5DB', buttonBackgroundColor: '#4F46E5',
-    buttonTextColor: '#FFFFFF', buttonText: 'Submit', buttonPosition: 'left', gap: 16,
-    buttonWidth: 'auto', buttonHeight: 'auto',
-};
-
-const defaultSettings: FormSettings = {
-    prefillFromAPI: false, prefillApiUrl: '', postOnSubmit: false, postApiUrl: ''
-};
-
-const defaultFieldStyles: FieldStyles = {
-    color: '#000000', 
-    backgroundColor: 'transparent', 
-    borderColor: '', 
-    fontSize: '', 
-    fontWeight: '', 
-    textAlign: 'left',
-    padding: '1rem',
-    listStyleType: 'disc',
-    custom: [], 
-    desktop: { width: '100%' }, 
-    tablet: { width: '100%' }, 
-    mobile: { width: '100%' },
-};
+const defaultStyles: FormStyles = { backgroundType: 'color', backgroundColor: '#FFFFFF', backgroundImage: '', textColor: '#000000', fieldBackgroundColor: 'transparent', fieldBorderColor: '#D1D5DB', buttonBackgroundColor: '#4F46E5', buttonTextColor: '#FFFFFF', buttonText: 'Submit', buttonPosition: 'left', gap: 16, buttonWidth: 'auto', buttonHeight: 'auto' };
+const defaultSettings: FormSettings = { prefillFromAPI: false, prefillApiUrl: '', postOnSubmit: false, postApiUrl: '' };
+const defaultFieldStyles: FieldStyles = { color: '#000000', backgroundColor: 'transparent', borderColor: '', fontSize: '', fontWeight: '', textAlign: 'left', padding: '1rem', listStyleType: 'disc', custom: [], desktop: { width: '100%' }, tablet: { width: '100%' }, mobile: { width: '100%' } };
 
 export default function EditorPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const params = useParams();
     const formId = params?.formId as string;
-
     const [form, setForm, undo, redo, canUndo, canRedo] = useHistory<Form | null>(null);
-    const [lastSavedState, setLastSavedState] = useState<Form | null>(null);
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [lastDraftState, setLastDraftState] = useState<Form | null>(null);
+    const [lastPublishedState, setLastPublishedState] = useState<Form | null>(null);
+    const [hasUnsavedDraftChanges, setHasUnsavedDraftChanges] = useState(false);
+    const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
     const [selectedField, setSelectedField] = useState<FormField | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -293,6 +164,8 @@ export default function EditorPage() {
     const [publishHistory, setPublishHistory] = useState<any[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
     const [notification, setNotification] = useState<NotificationType>({ message: '', type: 'success', visible: false });
+    const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+    const [isPropertiesOpen, setIsPropertiesOpen] = useState(false);
 
     useEffect(() => { setIsBrowser(true); }, []);
 
@@ -305,12 +178,23 @@ export default function EditorPage() {
 
     useEffect(() => {
         if (user && formId) {
-            const fetchFormData = async () => {
+            const fetchInitialData = async () => {
                 setLoading(true);
                 const token = await user.getIdToken();
-                const res = await fetch(`/api/forms/${formId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) {
-                    const data = await res.json();
+                const headers = { 'Authorization': `Bearer ${token}` };
+
+                try {
+                    const [draftRes, publishesRes] = await Promise.all([
+                        fetch(`/api/forms/${formId}`, { headers }),
+                        fetch(`/api/forms/${formId}/history/publishes`, { headers })
+                    ]);
+
+                    if (!draftRes.ok) {
+                        router.push('/dashboard');
+                        return;
+                    }
+
+                    const data = await draftRes.json();
                     const validatedForm = {
                         ...data,
                         fields: data.fields.map((field: FormField) => ({
@@ -323,42 +207,59 @@ export default function EditorPage() {
                         styles: { ...defaultStyles, ...data.styles },
                         settings: { ...defaultSettings, ...data.settings }
                     };
+                    
                     setForm(validatedForm, true);
-                    setLastSavedState(JSON.parse(JSON.stringify(validatedForm)));
-                } else { router.push('/dashboard'); }
-                setLoading(false);
+                    setLastDraftState(JSON.parse(JSON.stringify(validatedForm)));
+
+                    if (publishesRes.ok) {
+                        const publishesData = await publishesRes.json();
+                        setLastPublishedState(publishesData.length > 0 ? publishesData[0] : null);
+                    } else {
+                        setLastPublishedState(null);
+                    }
+
+                } catch (error) {
+                    console.error("Failed to fetch form data:", error);
+                    showNotification('Failed to load form data.', 'error');
+                } finally {
+                    setLoading(false);
+                }
             };
-            fetchFormData();
+            fetchInitialData();
         }
-    }, [user, formId, router, setForm]);
+    }, [user, formId, router, setForm, showNotification]);
 
     useEffect(() => {
-        if (form && lastSavedState) {
-            setHasUnsavedChanges(JSON.stringify(form) !== JSON.stringify(lastSavedState));
+        if (form && lastDraftState) {
+            const isDifferent = JSON.stringify(form) !== JSON.stringify(lastDraftState);
+            setHasUnsavedDraftChanges(isDifferent);
         }
-    }, [form, lastSavedState]);
-    
+    }, [form, lastDraftState]);
+
+    useEffect(() => {
+        if (form && lastPublishedState) {
+            const isDifferent = JSON.stringify(form.fields) !== JSON.stringify(lastPublishedState.fields) ||
+                               JSON.stringify(form.styles) !== JSON.stringify(lastPublishedState.styles) ||
+                               JSON.stringify(form.settings) !== JSON.stringify(lastPublishedState.settings) ||
+                               form.title !== lastPublishedState.title;
+            setHasUnpublishedChanges(isDifferent);
+        } else if (form && !lastPublishedState) {
+            setHasUnpublishedChanges(true);
+        }
+    }, [form, lastPublishedState]);
+
     const fetchHistory = async () => {
         if (!user || !formId || historyLoading) return;
-        
         setHistoryLoading(true);
         try {
             const token = await user.getIdToken();
             const headers = { 'Authorization': `Bearer ${token}` };
-            
             const [savesRes, publishesRes] = await Promise.all([
                 fetch(`/api/forms/${formId}/history/saves`, { headers }),
                 fetch(`/api/forms/${formId}/history/publishes`, { headers })
             ]);
-
-            if (savesRes.ok) {
-                const savesData = await savesRes.json();
-                setSaveHistory(savesData);
-            }
-            if (publishesRes.ok) {
-                const publishesData = await publishesRes.json();
-                setPublishHistory(publishesData);
-            }
+            if (savesRes.ok) setSaveHistory(await savesRes.json());
+            if (publishesRes.ok) setPublishHistory(await publishesRes.json());
         } catch (error) {
             console.error("Failed to fetch form history", error);
             showNotification('Could not load form history.', 'error');
@@ -371,8 +272,7 @@ export default function EditorPage() {
         if (!form) return;
         const { title, fields, styles, settings } = versionData;
         const restoredForm = { ...form, title, fields, styles, settings };
-        // @ts-ignore
-        setForm(restoredForm, false); 
+        setForm(restoredForm, false);
         setShowHistoryPanel(false);
         showNotification('Version restored successfully!', 'success');
     };
@@ -391,9 +291,7 @@ export default function EditorPage() {
             }
             if (f.type === 'section' && f.fields) {
                 const [recursedFields, foundField] = findAndUpdateField(f.fields, id, updateFn);
-                if (foundField) {
-                    updatedField = foundField;
-                }
+                if (foundField) updatedField = foundField;
                 return { ...f, fields: recursedFields };
             }
             return f;
@@ -437,33 +335,14 @@ export default function EditorPage() {
 
     const addField = (type: FieldType, sectionId?: string) => {
         if (!form) return;
-
         const hasOptions = ['select', 'radio', 'checkbox', 'ordered-list', 'unordered-list'].includes(type);
-        const newField: FormField = {
-            id: `field_${Date.now()}`,
-            type,
-            label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
-            name: `field_${Date.now()}`,
-            fieldId: `field_${Date.now()}`,
-            placeholder: '',
-            required: false,
-            requiredConditions: { enabled: false, logic: 'and', conditions: [] },
-            options: hasOptions ? [{ label: 'List Item 1', value: 'item_1' }] : [],
-            layout: 'vertical',
-            width: '100%',
-            styles: { ...defaultFieldStyles },
-            conditions: [],
-            conditionLogic: 'and',
-            fields: type === 'section' ? [] : undefined,
-        };
-
+        const newField: FormField = { id: `field_${Date.now()}`, type, label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`, name: `field_${Date.now()}`, fieldId: `field_${Date.now()}`, placeholder: '', required: false, requiredConditions: { enabled: false, logic: 'and', conditions: [] }, options: hasOptions ? [{ label: 'List Item 1', value: 'item_1' }] : [], layout: 'vertical', width: '100%', styles: { ...defaultFieldStyles }, conditions: [], conditionLogic: 'and', fields: type === 'section' ? [] : undefined, };
         if (sectionId) {
             const [newFields] = findAndUpdateField(form.fields, sectionId, (section: FormField) => ({
                 ...section,
                 fields: [...(section.fields || []), newField]
             }));
             updateForm({ fields: newFields });
-
         } else {
             updateForm({ fields: [...form.fields, newField] });
         }
@@ -471,21 +350,16 @@ export default function EditorPage() {
 
     const deleteField = (id: string) => {
         if (!form) return;
-
         const filterFields = (fields: FormField[]): FormField[] => {
-            return fields
-                .filter(f => f.id !== id)
-                .map(f => {
-                    if (f.type === 'section' && f.fields) {
-                        return { ...f, fields: filterFields(f.fields) };
-                    }
-                    return f;
-                });
+            return fields.filter(f => f.id !== id).map(f => {
+                if (f.type === 'section' && f.fields) {
+                    return { ...f, fields: filterFields(f.fields) };
+                }
+                return f;
+            });
         };
-
         const newFields = filterFields(form.fields);
         updateForm({ fields: newFields });
-
         if (selectedField?.id === id) {
             setSelectedField(null);
         }
@@ -535,36 +409,53 @@ export default function EditorPage() {
     const onDragEnd = (result: DropResult) => {
         const { source, destination } = result;
         if (!destination || !form) return;
-
-        let newFormFields = JSON.parse(JSON.stringify(form.fields));
-
-        const findFieldsArray = (fields: FormField[], droppableId: string): FormField[] | null => {
-            if (droppableId === "form-canvas") {
-                return fields;
-            }
+        const newFormFields = JSON.parse(JSON.stringify(form.fields));
+        const findSubArray = (fields: FormField[], droppableId: string): FormField[] | null => {
+            if (droppableId === "form-canvas") return fields;
             for (const field of fields) {
-                if (`section-${field.id}` === droppableId) {
-                    return field.fields || [];
-                }
+                if (`section-${field.id}` === droppableId) return field.fields || [];
                 if (field.fields) {
-                    const found = findFieldsArray(field.fields, droppableId);
+                    const found = findSubArray(field.fields, droppableId);
                     if (found) return found;
                 }
             }
             return null;
         };
-
-        let sourceContainer = findFieldsArray(newFormFields, source.droppableId);
-        if (!sourceContainer) return;
-
-        const [movedItem] = sourceContainer.splice(source.index, 1);
-
-        let destinationContainer = findFieldsArray(newFormFields, destination.droppableId);
-        if (!destinationContainer) return;
-
-        destinationContainer.splice(destination.index, 0, movedItem);
-
-        updateForm({ fields: newFormFields });
+        const updateSubArray = (fields: FormField[], droppableId: string, newSubArray: FormField[]): FormField[] => {
+            if (droppableId === "form-canvas") return newSubArray;
+            return fields.map(field => {
+                if (`section-${field.id}` === droppableId) return { ...field, fields: newSubArray };
+                if (field.fields) return { ...field, fields: updateSubArray(field.fields, droppableId, newSubArray) };
+                return field;
+            });
+        };
+        const sourceArray = findSubArray(newFormFields, source.droppableId);
+        const destArray = source.droppableId === destination.droppableId ? sourceArray : findSubArray(newFormFields, destination.droppableId);
+        if (!sourceArray || !destArray) return;
+        const [movedItem] = sourceArray.splice(source.index, 1);
+        destArray.splice(destination.index, 0, movedItem);
+        let finalFields = updateSubArray(newFormFields, destination.droppableId, destArray);
+        if (source.droppableId !== destination.droppableId) {
+             finalFields = updateSubArray(finalFields, source.droppableId, sourceArray);
+        }
+        updateForm({ fields: finalFields });
+    };
+    
+    const updateLiveVersion = async (formData: Form) => {
+        if (!user) return;
+        const token = await user.getIdToken();
+        try {
+            const res = await fetch(`/api/forms/${formData.id}/update-live-version`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+            if (!res.ok) throw new Error('Failed to update live version.');
+            console.log('Live version updated successfully.');
+        } catch (error) {
+            console.error("Failed to update live version:", error);
+            showNotification('Could not sync live version.', 'error');
+        }
     };
 
     const saveForm = async () => {
@@ -578,7 +469,8 @@ export default function EditorPage() {
                 body: JSON.stringify({ title: form.title, fields: form.fields, styles: form.styles, settings: form.settings }),
             });
             if (!res.ok) throw new Error("Failed to save.");
-            setLastSavedState(JSON.parse(JSON.stringify(form)));
+            const savedFormState = JSON.parse(JSON.stringify(form));
+            setLastDraftState(savedFormState);
             showNotification('Form saved successfully!', 'success');
         } catch (error) {
             console.error("Failed to save form:", error);
@@ -590,16 +482,30 @@ export default function EditorPage() {
     const publishForm = async () => {
         if (!user || !form) return;
         setPublishing(true);
-        await saveForm();
         const token = await user.getIdToken();
         try {
-            await fetch(`/api/forms/${formId}/publish`, {
+            await saveForm();
+    
+            const publishRes = await fetch(`/api/forms/${formId}/publish`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(form),
             });
+    
+            if (!publishRes.ok) {
+                const errorData = await publishRes.text();
+                throw new Error(errorData || "Failed to publish form.");
+            }
+            
+            const publishedFormState = JSON.parse(JSON.stringify(form));
+            setLastDraftState(publishedFormState);
+            setLastPublishedState(publishedFormState);
             updateForm({ hasPublishedVersion: true });
             setShowPublishModal(true);
             showNotification('Form published!', 'success');
+            
+            await updateLiveVersion(publishedFormState);
+    
         } catch (error) {
             console.error("Failed to publish form:", error);
             showNotification('Error: Could not publish form.', 'error');
@@ -614,15 +520,8 @@ export default function EditorPage() {
         window.open(`/form/owner/${form.id}`, '_blank');
     };
 
-    const handleUndo = () => {
-        undo();
-        showNotification('Undo successful.', 'success');
-    };
-
-    const handleRedo = () => {
-        redo();
-        showNotification('Redo successful.', 'success');
-    };
+    const handleUndo = () => { undo(); showNotification('Undo successful.', 'success'); };
+    const handleRedo = () => { redo(); showNotification('Redo successful.', 'success'); };
 
     if (authLoading || loading) { return <QuickFormLoader />; }
     if (!form) { return <div className="flex h-screen w-full items-center justify-center bg-gray-900 text-gray-400"><p>Form not found or failed to load.</p></div>; }
@@ -630,8 +529,21 @@ export default function EditorPage() {
     return (
         <div className="flex h-screen bg-gray-900 text-gray-200 overflow-hidden">
             <Notification notification={notification} onClose={() => setNotification(prev => ({ ...prev, visible: false }))} />
-            <FieldPalette onAddField={addField} />
-            <main className="flex-1 flex flex-col">
+            <div className="hidden lg:flex flex-shrink-0 h-full">
+                <FieldPalette onAddField={addField} />
+            </div>
+            {isPaletteOpen && (
+                <div className="lg:hidden fixed inset-0 z-50" onClick={() => setIsPaletteOpen(false)}>
+                    <div className="absolute top-0 left-0 h-full bg-gray-900/80 backdrop-blur-lg border-r border-white/10 p-4 w-full max-w-xs" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-6">
+                             <h2 className="text-xl font-bold text-white">Form Fields</h2>
+                            <button onClick={() => setIsPaletteOpen(false)} className="text-gray-400 hover:text-white p-1 rounded-full"><XIcon size={24} /></button>
+                        </div>
+                        <FieldPalette onAddField={type => { addField(type); setIsPaletteOpen(false); }} />
+                    </div>
+                </div>
+            )}
+            <main className="flex-1 flex flex-col min-w-0">
                 <Header
                     formTitle={form.title}
                     onFormTitleChange={title => updateForm({ title })}
@@ -639,88 +551,64 @@ export default function EditorPage() {
                     saving={saving}
                     onPublish={publishForm}
                     onShare={() => setShowShareModal(true)}
-                    onHistoryClick={() => { setShowHistoryPanel(true); fetchHistory(); }}
+                    onHistoryClick={() => { setShowHistoryPanel(true); setIsPropertiesOpen(true); fetchHistory(); }}
                     publishing={publishing}
                     onPreview={previewForm}
                     onUndo={handleUndo}
                     canUndo={canUndo}
                     onRedo={handleRedo}
                     canRedo={canRedo}
-                    hasUnsavedChanges={hasUnsavedChanges}
+                    hasUnsavedDraftChanges={hasUnsavedDraftChanges}
+                    hasUnpublishedChanges={hasUnpublishedChanges}
                     hasPublishedVersion={form.hasPublishedVersion || false}
                     previewMode={previewMode}
                     onPreviewModeChange={setPreviewMode}
+                    onTogglePalette={() => setIsPaletteOpen(true)}
+                    onToggleProperties={() => setIsPropertiesOpen(true)}
                 />
-                 
-                <Canvas
-                    form={form}
-                    previewMode={previewMode}
-                    selectedField={selectedField}
-                    onFieldSelect={setSelectedField}
-                    onDragEnd={onDragEnd}
-                    onFieldDelete={deleteField}
-                    isBrowser={isBrowser}
-                />
+                <Canvas form={form} previewMode={previewMode} selectedField={selectedField} onFieldSelect={(field) => { setSelectedField(field); if (window.innerWidth < 768) setIsPropertiesOpen(true);}} onDragEnd={onDragEnd} onFieldDelete={deleteField} isBrowser={isBrowser} />
             </main>
-            
-            {showHistoryPanel ? (
-                <HistoryPanel 
-                    onClose={() => setShowHistoryPanel(false)}
-                    activeTab={historyTab}
-                    setActiveTab={setHistoryTab}
-                    saveHistory={saveHistory}
-                    publishHistory={publishHistory}
-                    onRestore={handleRestoreVersion}
-                    isLoading={historyLoading}
-                />
-            ) : (
-                <PropertiesPanel
-                    selectedField={selectedField}
-                    form={form}
-                    previewMode={previewMode}
-                    onUpdateField={updateField}
-                    onUpdateFieldResponsiveStyle={updateFieldResponsiveStyle}
-                    onUpdateFieldBaseStyle={updateFieldBaseStyle}
-                    onUpdateOption={updateOption}
-                    onAddOption={addOption}
-                    onRemoveOption={removeOption}
-                    onUpdateForm={updateForm}
-                />
+            <div className="hidden md:flex flex-shrink-0 h-full">
+                {showHistoryPanel ? (
+                    <HistoryPanel onClose={() => setShowHistoryPanel(false)} activeTab={historyTab} setActiveTab={setHistoryTab} saveHistory={saveHistory} publishHistory={publishHistory} onRestore={handleRestoreVersion} isLoading={historyLoading} />
+                ) : (
+                    <PropertiesPanel selectedField={selectedField} form={form} previewMode={previewMode} onUpdateField={updateField} onUpdateFieldResponsiveStyle={updateFieldResponsiveStyle} onUpdateFieldBaseStyle={updateFieldBaseStyle} onUpdateOption={updateOption} onAddOption={addOption} onRemoveOption={removeOption} onUpdateForm={updateForm} />
+                )}
+            </div>
+            {isPropertiesOpen && (
+                 <div className="md:hidden fixed inset-0 z-50" onClick={() => { setIsPropertiesOpen(false); setShowHistoryPanel(false); }}>
+                    <div className="absolute top-0 right-0 h-full bg-gray-900/80 backdrop-blur-lg border-l border-white/10 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                        {showHistoryPanel ? (
+                            <HistoryPanel onClose={() => { setShowHistoryPanel(false); setIsPropertiesOpen(false); }} activeTab={historyTab} setActiveTab={setHistoryTab} saveHistory={saveHistory} publishHistory={publishHistory} onRestore={handleRestoreVersion} isLoading={historyLoading} />
+                        ) : (
+                            <PropertiesPanel selectedField={selectedField} form={form} previewMode={previewMode} onUpdateField={updateField} onUpdateFieldResponsiveStyle={updateFieldResponsiveStyle} onUpdateFieldBaseStyle={updateFieldBaseStyle} onUpdateOption={updateOption} onAddOption={addOption} onRemoveOption={removeOption} onUpdateForm={updateForm} />
+                        )}
+                    </div>
+                 </div>
             )}
-            
             {showPublishModal && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full border border-white/10">
                         <h3 className="text-xl font-bold text-white">Form Published!</h3>
                         <p className="text-gray-400 mt-2 mb-4">Your form is now live and can be shared with the public link.</p>
                         <div className="flex items-center bg-gray-900/50 border border-white/10 rounded-lg p-2">
-                            <input type="text" readOnly value={`${window.location.origin}/form/${formId}`} className="flex-1 bg-transparent text-gray-300 focus:outline-none" />
-                            <button onClick={() => {
-                                navigator.clipboard.writeText(`${window.location.origin}/form/${formId}`);
-                                showNotification('Public URL copied!', 'success');
-                            }} className="bg-indigo-600 text-white font-semibold py-1 px-3 rounded-md hover:bg-indigo-500 cursor-pointer">Copy</button>
+                            <input type="text" readOnly value={`${window.location.origin}/form/${formId}`} className="flex-1 bg-transparent text-gray-300 focus:outline-none min-w-0" />
+                            <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/form/${formId}`); showNotification('Public URL copied!', 'success'); }} className="bg-indigo-600 text-white font-semibold py-1 px-3 rounded-md hover:bg-indigo-500 cursor-pointer">Copy</button>
                         </div>
-                        <div className="text-right mt-6">
-                            <button onClick={() => setShowPublishModal(false)} className="bg-gray-700/80 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-600/80 cursor-pointer">Close</button>
-                        </div>
+                        <div className="text-right mt-6"><button onClick={() => setShowPublishModal(false)} className="bg-gray-700/80 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-600/80 cursor-pointer">Close</button></div>
                     </div>
                 </div>
             )}
              {showShareModal && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full border border-white/10">
                         <h3 className="text-xl font-bold text-white">Share Form</h3>
                         <p className="text-gray-400 mt-2 mb-4">Anyone with the public link can view and submit this form.</p>
                         <div className="flex items-center bg-gray-900/50 border border-white/10 rounded-lg p-2">
-                            <input type="text" readOnly value={`${window.location.origin}/form/${formId}`} className="flex-1 bg-transparent text-gray-300 focus:outline-none" />
-                            <button onClick={() => {
-                                navigator.clipboard.writeText(`${window.location.origin}/form/${formId}`);
-                                showNotification('Public URL copied!', 'success');
-                            }} className="bg-indigo-600 text-white font-semibold py-1 px-3 rounded-md hover:bg-indigo-500 cursor-pointer">Copy</button>
+                            <input type="text" readOnly value={`${window.location.origin}/form/${formId}`} className="flex-1 bg-transparent text-gray-300 focus:outline-none min-w-0" />
+                            <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/form/${formId}`); showNotification('Public URL copied!', 'success'); }} className="bg-indigo-600 text-white font-semibold py-1 px-3 rounded-md hover:bg-indigo-500 cursor-pointer">Copy</button>
                         </div>
-                        <div className="text-right mt-6">
-                            <button onClick={() => setShowShareModal(false)} className="bg-gray-700/80 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-600/80 cursor-pointer">Close</button>
-                        </div>
+                        <div className="text-right mt-6"><button onClick={() => setShowShareModal(false)} className="bg-gray-700/80 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-600/80 cursor-pointer">Close</button></div>
                     </div>
                 </div>
             )}
@@ -744,10 +632,17 @@ const Header: FC<{
     canUndo: boolean;
     onRedo: () => void;
     canRedo: boolean;
-    hasUnsavedChanges: boolean;
+    hasUnsavedDraftChanges: boolean;
+    hasUnpublishedChanges: boolean;
     hasPublishedVersion: boolean;
-}> = ({ formTitle, onFormTitleChange, onSave, saving, onPublish, onShare, onHistoryClick, publishing, onPreview, onUndo, canUndo, onRedo, canRedo, hasUnsavedChanges, hasPublishedVersion, previewMode, onPreviewModeChange }) => {
-    
+    onTogglePalette: () => void;
+    onToggleProperties: () => void;
+}> = ({ 
+    formTitle, onFormTitleChange, onSave, saving, onPublish, onShare, onHistoryClick, 
+    publishing, onPreview, onUndo, canUndo, onRedo, canRedo, hasUnsavedDraftChanges, 
+    hasUnpublishedChanges, hasPublishedVersion, previewMode, onPreviewModeChange, 
+    onTogglePalette, onToggleProperties 
+}) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -763,21 +658,25 @@ const Header: FC<{
 
     const getPublishButtonText = () => {
         if (publishing) return 'Publishing...';
-        if (hasPublishedVersion && !hasUnsavedChanges) return 'Published';
+        if (hasPublishedVersion && !hasUnpublishedChanges) return 'Published';
         return 'Publish';
     };
 
-    const isPublishButtonDisabled = publishing || (hasPublishedVersion && !hasUnsavedChanges);
+    const isPublishButtonDisabled = publishing || !hasUnpublishedChanges;
+    const isSaveButtonDisabled = saving || !hasUnsavedDraftChanges;
 
     return (
         <div className='flex-shrink-0'>
-            <header className="flex items-center justify-between p-4 border-b border-white/10 bg-gray-900/70 backdrop-blur-lg sticky top-0 z-20">
-                <div className="flex items-center gap-4 flex-1">
-                    <Link href="/forms" className="p-2 rounded-full hover:bg-gray-700/80 transition-colors cursor-pointer"><ChevronLeftIcon size={20} /></Link>
-                    <input type="text" value={formTitle} onChange={e => onFormTitleChange(e.target.value)} className="text-xl font-bold text-white bg-transparent focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-md px-2" />
+            <header className="flex items-center justify-between p-2 md:p-4 border-b border-white/10 bg-gray-900/70 backdrop-blur-lg sticky top-0 z-30 flex-wrap gap-y-2">
+                <div className="flex items-center gap-2 flex-1 basis-1/3 min-w-[150px]">
+                    <button title="Add Fields" onClick={onTogglePalette} className="lg:hidden p-2 rounded-lg hover:bg-gray-700/80 transition-colors cursor-pointer">
+                        <PlusIcon size={20} />
+                    </button>
+                    <Link href="/forms" className="p-2 rounded-full hover:bg-gray-700/80 transition-colors cursor-pointer hidden sm:block"><ChevronLeftIcon size={20} /></Link>
+                    <input type="text" value={formTitle} onChange={e => onFormTitleChange(e.target.value)} className="text-lg md:text-xl font-bold text-white bg-transparent focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-md px-2 w-full" />
                 </div>
-                
-                <div className="flex-1 flex justify-center">
+
+                <div className="flex items-center justify-center flex-1 basis-1/3 order-3 md:order-2 w-full md:w-auto">
                     <div className="flex items-center gap-2 bg-gray-800/60 p-1 rounded-lg">
                         <button title="Desktop View" onClick={() => onPreviewModeChange('desktop')} className={`p-2 rounded-md cursor-pointer ${previewMode === 'desktop' ? 'bg-indigo-600' : 'hover:bg-gray-700'}`}><MonitorIcon size={20}/></button>
                         <button title="Tablet View" onClick={() => onPreviewModeChange('tablet')} className={`p-2 rounded-md cursor-pointer ${previewMode === 'tablet' ? 'bg-indigo-600' : 'hover:bg-gray-700'}`}><TabletIcon size={20}/></button>
@@ -785,12 +684,20 @@ const Header: FC<{
                     </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 flex-1">
-                    <button onClick={onUndo} disabled={!canUndo || saving} className="hidden md:flex items-center gap-2 py-2 px-4 rounded-lg hover:bg-gray-700/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><UndoIcon size={18} /> <span className='hidden lg:inline'>Undo</span></button>
-                    <button onClick={onRedo} disabled={!canRedo || saving} className="hidden md:flex items-center gap-2 py-2 px-4 rounded-lg hover:bg-gray-700/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><RedoIcon size={18} /> <span className='hidden lg:inline'>Redo</span></button>
-                    <button onClick={onSave} disabled={!hasUnsavedChanges || saving} className="flex items-center gap-2 py-2 px-4 rounded-lg bg-gray-700/80 hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><SaveIcon size={18} /> {saving ? 'Saving...' : 'Save'}</button>
-                    <button onClick={onPublish} disabled={isPublishButtonDisabled} className="flex items-center gap-2 py-2 px-4 bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors disabled:bg-indigo-400 disabled:cursor-not-allowed"><GlobeIcon size={18} /> {getPublishButtonText()}</button>
+                <div className="flex items-center justify-end gap-2 flex-1 basis-1/3 order-2 md:order-3">
+                    <button onClick={onUndo} disabled={!canUndo || saving} title="Undo" className="p-2 rounded-lg hover:bg-gray-700/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><UndoIcon size={18} /></button>
+                    <button onClick={onRedo} disabled={!canRedo || saving} title="Redo" className="p-2 rounded-lg hover:bg-gray-700/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><RedoIcon size={18} /></button>
                     
+                    <button onClick={onSave} disabled={isSaveButtonDisabled} className="flex items-center gap-2 py-2 px-3 rounded-lg bg-gray-700/80 hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <SaveIcon size={18} />
+                        <span className="hidden sm:inline">{saving ? 'Saving...' : 'Save'}</span>
+                    </button>
+                    
+                    <button onClick={onPublish} disabled={isPublishButtonDisabled} className="flex items-center gap-2 py-2 px-3 bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors disabled:bg-indigo-400/80 disabled:cursor-not-allowed">
+                        <GlobeIcon size={18} />
+                        <span className="hidden sm:inline">{getPublishButtonText()}</span>
+                    </button>
+
                     <div className="relative" ref={menuRef}>
                         <button onClick={() => setIsMenuOpen(prev => !prev)} className="p-2 rounded-full hover:bg-gray-700/80 transition-colors">
                             <MoreVerticalIcon size={20} />
@@ -798,19 +705,22 @@ const Header: FC<{
                         {isMenuOpen && (
                             <div className="absolute right-0 mt-2 w-56 bg-gray-800 border border-white/10 rounded-lg shadow-xl z-30">
                                 <div className="p-2 space-y-1">
-                                    <button onClick={onHistoryClick} className="w-full flex items-center gap-3 p-2 text-left text-sm rounded-md hover:bg-gray-700/80 transition-colors">
+                                    <button onClick={() => { onHistoryClick(); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 p-2 text-left text-sm rounded-md hover:bg-gray-700/80 transition-colors">
                                         <HistoryIcon size={16}/> Version History
                                     </button>
-                                    <button onClick={onPreview} className="w-full flex items-center gap-3 p-2 text-left text-sm rounded-md hover:bg-gray-700/80 transition-colors">
+                                    <button onClick={() => { onPreview(); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 p-2 text-left text-sm rounded-md hover:bg-gray-700/80 transition-colors">
                                         <EyeIcon size={16}/> Preview Form
                                     </button>
-                                    <button onClick={onShare} disabled={!hasPublishedVersion} className="w-full flex items-center gap-3 p-2 text-left text-sm rounded-md hover:bg-gray-700/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <button onClick={() => { onShare(); setIsMenuOpen(false); }} disabled={!hasPublishedVersion} className="w-full flex items-center gap-3 p-2 text-left text-sm rounded-md hover:bg-gray-700/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                         <Share2Icon size={16}/> Share Link
                                     </button>
                                 </div>
                             </div>
                         )}
                     </div>
+                     <button title="View Properties" onClick={onToggleProperties} className="md:hidden p-2 rounded-lg hover:bg-gray-700/80 transition-colors cursor-pointer">
+                        <SlidersHorizontalIcon size={20} />
+                    </button>
                 </div>
             </header>
         </div>
@@ -818,17 +728,17 @@ const Header: FC<{
 };
 
 const FieldPalette: FC<{ onAddField: (type: FieldType, sectionId?: string) => void }> = ({ onAddField }) => (
-    <aside className="w-64 bg-gray-900/70 backdrop-blur-lg border-r border-white/10 p-6 flex flex-col">
-        <h2 className="text-xl font-bold text-white mb-6 flex-shrink-0">Form Fields</h2>
-        <div className="flex-grow overflow-y-auto -mr-4 pr-4">
+    <aside className="w-full lg:w-64 bg-transparent lg:bg-gray-900/70 lg:backdrop-blur-lg lg:border-r lg:border-white/10 p-2 lg:p-6 flex flex-col transition-all duration-300 h-full">
+        <div className="flex-grow overflow-y-auto lg:-mr-4 lg:pr-4">
             <div className="space-y-3">
                 {fieldTypes.map(ft => (
-                    <button 
-                        key={ft.type} 
-                        onClick={() => onAddField(ft.type)} 
-                        className="w-full flex items-center gap-3 p-3 bg-gray-800/60 hover:bg-indigo-600/30 rounded-lg transition-colors cursor-pointer"
+                    <button
+                        key={ft.type}
+                        onClick={() => onAddField(ft.type)}
+                        title={ft.label}
+                        className="w-full flex items-center gap-3 p-3 bg-gray-800/60 hover:bg-indigo-600/30 rounded-lg transition-colors cursor-pointer justify-start"
                     >
-                        <ft.icon className="h-5 w-5 text-indigo-400" />
+                        <ft.icon className="h-5 w-5 text-indigo-400 flex-shrink-0" />
                         <span>{ft.label}</span>
                     </button>
                 ))}
@@ -848,29 +758,24 @@ const Canvas: FC<{
 }> = ({ form, previewMode, selectedField, onFieldSelect, onDragEnd, onFieldDelete, isBrowser }) => {
     const previewWidths = { desktop: '100%', tablet: '768px', mobile: '375px' };
 
-    const toCamelCase = (str: string) => str.replace(/-./g, x => x[1].toUpperCase());
-
     const renderField = (field: FormField): JSX.Element | null => {
         const responsiveStyles = field.styles?.[previewMode] || {};
         const baseStyles = field.styles || {};
-
         const customStyles = baseStyles.custom?.reduce((acc, style) => {
             if (style.name) {
                 acc[toCamelCase(style.name)] = style.value;
             }
             return acc;
         }, {} as { [key: string]: string }) || {};
-
         const fieldStyles: React.CSSProperties = {
             ...customStyles,
-            color: baseStyles.color, 
+            color: baseStyles.color,
             borderColor: baseStyles.borderColor || form.styles.fieldBorderColor,
             fontSize: responsiveStyles.fontSize || baseStyles.fontSize,
             fontWeight: baseStyles.fontWeight,
             textAlign: baseStyles.textAlign,
             backgroundColor: baseStyles.backgroundColor,
         };
-
         switch (field.type) {
             case 'heading': return <h2 className="text-2xl break-words p-2" style={fieldStyles}>{field.label}</h2>;
             case 'paragraph': return <p className="break-words p-2" style={fieldStyles}>{field.label}</p>;
@@ -913,7 +818,7 @@ const Canvas: FC<{
             default: return null;
         }
     };
-    
+
     const DraggableField = ({ field, index }: { field: FormField, index: number }) => (
         <Draggable key={field.id} draggableId={field.id} index={index}>
             {(provided) => (
@@ -942,7 +847,7 @@ const Canvas: FC<{
     );
 
     return (
-        <div className="flex-1 overflow-y-auto p-8" style={form.styles.backgroundType === 'image' ? { backgroundImage: `url(${form.styles.backgroundImage})`, backgroundSize: 'cover' } : { backgroundColor: form.styles.backgroundColor, color: form.styles.textColor }}>
+        <div className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-8" style={form.styles.backgroundType === 'image' ? { backgroundImage: `url(${form.styles.backgroundImage})`, backgroundSize: 'cover' } : { backgroundColor: form.styles.backgroundColor, color: form.styles.textColor }}>
             <div className="mx-auto transition-all duration-300" style={{ maxWidth: previewWidths[previewMode] }}>
                 {isBrowser && (
                     <DragDropContext onDragEnd={onDragEnd}>
@@ -1057,8 +962,8 @@ const PropertiesPanel: FC<{
     };
 
     return (
-        <aside className="w-96 bg-gray-900/70 backdrop-blur-lg border-l border-white/10 pl-6 py-6 pr-2 flex flex-col">
-            <div className="flex-grow overflow-y-auto pr-4">
+        <aside className="w-full md:w-80 lg:w-96 bg-transparent md:bg-gray-900/70 md:backdrop-blur-lg md:border-l md:border-white/10 flex flex-col transition-all duration-300 h-full p-4 md:p-6">
+            <div className="flex-grow overflow-y-auto pr-2">
                 {selectedField ? (
                     <div className="mb-6">
                         <h2 className="text-xl font-bold text-white mb-4">Field Editor</h2>
@@ -1096,27 +1001,12 @@ const PropertiesPanel: FC<{
                                 {selectedField.type !== 'heading' && selectedField.type !== 'paragraph' && selectedField.type !== 'hr' && selectedField.type !== 'section' && (
                                     <Accordion title="Validation">
                                         <div className="flex items-center justify-between">
-                                            <label htmlFor="required" className="text-sm font-medium text-gray-300">Required Field</label>
-                                            <input
-                                                id="required"
-                                                type="checkbox"
-                                                checked={selectedField.required || false}
-                                                onChange={e => props.onUpdateField(selectedField.id, { required: e.target.checked })}
-                                                className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500 cursor-pointer"
-                                            />
+                                            <label htmlFor="required" className="text-sm font-medium text-gray-300 cursor-pointer">Required Field</label>
+                                            <input id="required" type="checkbox" checked={selectedField.required || false} onChange={e => props.onUpdateField(selectedField.id, { required: e.target.checked })} className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500 cursor-pointer" />
                                         </div>
                                         <div className="flex items-center justify-between mt-4">
-                                            <label htmlFor="required-conditional" className="text-sm font-medium text-gray-300">Conditional Required</label>
-                                            <input
-                                                id="required-conditional"
-                                                type="checkbox"
-                                                checked={selectedField.requiredConditions?.enabled || false}
-                                                onChange={e => {
-                                                    const currentConditions = selectedField.requiredConditions || { enabled: false, logic: 'and', conditions: [] };
-                                                    props.onUpdateField(selectedField.id, { requiredConditions: { ...currentConditions, enabled: e.target.checked } });
-                                                }}
-                                                className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500 cursor-pointer"
-                                            />
+                                            <label htmlFor="required-conditional" className="text-sm font-medium text-gray-300 cursor-pointer">Conditional Required</label>
+                                            <input id="required-conditional" type="checkbox" checked={selectedField.requiredConditions?.enabled || false} onChange={e => { const currentConditions = selectedField.requiredConditions || { enabled: false, logic: 'and', conditions: [] }; props.onUpdateField(selectedField.id, { requiredConditions: { ...currentConditions, enabled: e.target.checked } }); }} className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500 cursor-pointer" />
                                         </div>
                                         {selectedField.requiredConditions?.enabled && (
                                             <div className="mt-4 space-y-3 p-3 bg-gray-800/50 rounded-lg">
@@ -1154,26 +1044,16 @@ const PropertiesPanel: FC<{
                                      {selectedField.type === 'section' && (
                                         <div className="flex items-center justify-between mb-2">
                                             <label className="text-sm">Padding</label>
-                                            <input
-                                                type="text"
-                                                value={selectedField.styles?.padding || ''}
-                                                onChange={e => props.onUpdateFieldBaseStyle(selectedField.id, { padding: e.target.value })}
-                                                className="w-2/3 bg-gray-700 border border-white/10 rounded-lg px-3 py-1"
-                                                placeholder="e.g., 1rem or 16px"
-                                            />
+                                            <input type="text" value={selectedField.styles?.padding || ''} onChange={e => props.onUpdateFieldBaseStyle(selectedField.id, { padding: e.target.value })} className="w-2/3 bg-gray-700 border border-white/10 rounded-lg px-3 py-1" placeholder="e.g., 1rem or 16px" />
                                         </div>
-                                    )}
+                                     )}
                                     <div><label className="block text-sm font-medium text-gray-400 mb-1">Width ({props.previewMode})</label><select value={selectedField.styles?.[props.previewMode]?.width || selectedField.width} onChange={e => props.onUpdateFieldResponsiveStyle(selectedField.id, { width: e.target.value as FieldWidth }, props.previewMode)} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2"><option value="100%">Full</option><option value="50%">Half</option><option value="33.33%">Third</option></select></div>
                                 </Accordion>
                                 <Accordion title="Typography">
                                     {selectedField.type === 'unordered-list' && (
                                         <div className="flex items-center justify-between mb-2">
                                             <label className="text-sm">Bullet Style</label>
-                                            <select
-                                                value={selectedField.styles?.listStyleType || 'disc'}
-                                                onChange={e => props.onUpdateFieldBaseStyle(selectedField.id, { listStyleType: e.target.value as ListStyleType })}
-                                                className="w-2/3 bg-gray-700 border border-white/10 rounded-lg px-3 py-1"
-                                            >
+                                            <select value={selectedField.styles?.listStyleType || 'disc'} onChange={e => props.onUpdateFieldBaseStyle(selectedField.id, { listStyleType: e.target.value as ListStyleType })} className="w-2/3 bg-gray-700 border border-white/10 rounded-lg px-3 py-1" >
                                                 <option value="disc">Disc</option>
                                                 <option value="circle">Circle</option>
                                                 <option value="square">Square</option>
@@ -1291,7 +1171,7 @@ const HistoryPanel: FC<{
     onRestore: (versionData: any) => void;
     isLoading: boolean;
 }> = ({ onClose, activeTab, setActiveTab, saveHistory, publishHistory, onRestore, isLoading }) => {
-    
+
     const formatDate = (timestamp: any) => {
         if (!timestamp || !timestamp._seconds) return 'Invalid date';
         return new Date(timestamp._seconds * 1000).toLocaleString();
@@ -1301,8 +1181,8 @@ const HistoryPanel: FC<{
     const dateKey = activeTab === 'saved' ? 'savedAt' : 'publishedAt';
 
     return (
-        <aside className="w-96 bg-gray-900/70 backdrop-blur-lg border-l border-white/10 flex flex-col flex-shrink-0">
-            <div className="flex items-center justify-between p-6 border-b border-white/10 flex-shrink-0">
+        <aside className="w-full md:w-80 lg:w-96 bg-transparent md:bg-gray-900/70 md:backdrop-blur-lg md:border-l md:border-white/10 flex flex-col flex-shrink-0 transition-all duration-300 h-full">
+            <div className="flex items-center justify-between p-4 lg:p-6 border-b border-white/10 flex-shrink-0">
                 <h2 className="text-xl font-bold text-white">Version History</h2>
                 <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-700/80 transition-colors">
                     <XIcon size={20} />
@@ -1312,18 +1192,20 @@ const HistoryPanel: FC<{
                 <button onClick={() => setActiveTab('saved')} className={`flex-1 p-3 text-sm font-semibold cursor-pointer ${activeTab === 'saved' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-400'}`}>Saved</button>
                 <button onClick={() => setActiveTab('published')} className={`flex-1 p-3 text-sm font-semibold cursor-pointer ${activeTab === 'published' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-400'}`}>Published</button>
             </div>
-            <div className="flex-grow overflow-y-auto p-6">
+            <div className="flex-grow overflow-y-auto p-4 lg:p-6">
                 {isLoading ? (
                     <div className="text-center text-gray-400">Loading history...</div>
                 ) : (
-                    <ul className="space-y-4">
+                    <ul className="space-y-3">
                         {historyItems.length > 0 ? historyItems.map(version => (
-                            <li key={version.id} className="bg-gray-800/50 p-4 rounded-lg">
-                                <p className="text-sm font-semibold text-white">{formatDate(version[dateKey])}</p>
-                                <p className="text-xs text-gray-400 mb-3">Version ID: {version.id}</p>
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => onRestore(version)} className="text-sm bg-indigo-600 hover:bg-indigo-500 rounded-md px-3 py-1 transition-colors cursor-pointer">Restore</button>
+                            <li key={version.id} className="bg-gray-800/50 p-3 rounded-lg flex items-center justify-between transition-colors hover:bg-gray-800">
+                                <div>
+                                    <p className="text-sm font-semibold text-white">{formatDate(version[dateKey])}</p>
+                                    <p className="text-xs text-gray-400 font-mono">ID: {version.id.substring(0, 7)}...</p>
                                 </div>
+                                <button onClick={() => onRestore(version)} title="Restore this version" className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-indigo-600/50 transition-colors cursor-pointer">
+                                    <RotateCcwIcon size={16} />
+                                </button>
                             </li>
                         )) : (
                             <div className="text-center text-gray-500 mt-8">No {activeTab} versions found.</div>
