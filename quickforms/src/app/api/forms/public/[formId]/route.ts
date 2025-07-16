@@ -13,10 +13,8 @@ export async function GET(
     }
 
     try {
-        // Fetches the specified document from the public collection.
         const formDoc = await db.collection('publishedForms').doc(formId).get();
 
-        // If no document is found, the form is not published or the ID is incorrect.
         if (!formDoc.exists) {
             return NextResponse.json({ error: 'Form not found or is not published.' }, { status: 404 });
         }
@@ -26,16 +24,24 @@ export async function GET(
             return NextResponse.json({ error: 'Form data is invalid.' }, { status: 500 });
         }
 
-        // Only expose the necessary fields to the public.
-        // Sensitive data like the owner's UID is kept on the server.
         const publicFormData = {
             id: formDoc.id,
             title: formData.title,
-            fields: formData.fields,
-            styles: formData.styles,
+            pages: formData.pages || [],
+            fields: formData.fields || [],
+            styles: formData.styles || {},
             settings: { 
                 postOnSubmit: formData.settings?.postOnSubmit || false,
                 postApiUrl: formData.settings?.postApiUrl || '',
+                submitSuccessMessage: formData.settings?.submitSuccessMessage || 'Form submitted successfully!',
+                submitErrorMessage: formData.settings?.submitErrorMessage || 'There was an error submitting your form.',
+                enableThankYouPage: formData.settings?.enableThankYouPage || false,
+                thankYouPageContent: formData.settings?.thankYouPageContent || [],
+                pageTracker: formData.settings?.pageTracker || 'none',
+                pageTrackerColor: formData.settings?.pageTrackerColor || '#4F46E5',
+                pageTrackerBgColor: formData.settings?.pageTrackerBgColor || '#E5E7EB',
+                loader: formData.settings?.loader || {},
+                submitLoader: formData.settings?.submitLoader || {},
             }
         };
 

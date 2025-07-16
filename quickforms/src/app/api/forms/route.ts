@@ -1,9 +1,7 @@
-// src/app/api/forms/route.ts
 import { db, auth } from '@/lib/firebaseAdmin';
 import { NextRequest, NextResponse } from 'next/server';
 import { DocumentData, Timestamp } from 'firebase-admin/firestore';
 
-// GET handler to fetch all forms for a user
 export async function GET(req: NextRequest) {
     try {
         const authorization = req.headers.get('authorization');
@@ -31,12 +29,24 @@ export async function GET(req: NextRequest) {
             return acc;
         }, {} as Record<string, number>);
 
-        const formsWithSubmissions = forms.map((form: any) => ({
-            ...form,
-            submissions: submissionCounts[form.id] || 0,
-            status: form.status || 'Active',
-            createdAt: form.createdAt.toDate().toLocaleDateString(),
-        }));
+        const formsWithSubmissions = forms.map((form: any) => {
+            let formattedCreatedAt = '';
+            if (form.createdAt instanceof Timestamp) {
+                formattedCreatedAt = form.createdAt.toDate().toLocaleDateString();
+            } else if (form.createdAt instanceof Date) {
+                formattedCreatedAt = form.createdAt.toLocaleDateString();
+            } else {
+                console.warn(`Unexpected type for createdAt for form ${form.id}:`, typeof form.createdAt);
+                formattedCreatedAt = 'N/A';
+            }
+
+            return {
+                ...form,
+                submissions: submissionCounts[form.id] || 0,
+                status: form.status || 'Active',
+                createdAt: formattedCreatedAt,
+            };
+        });
 
         return NextResponse.json(formsWithSubmissions);
     } catch (error: any) {
@@ -45,7 +55,6 @@ export async function GET(req: NextRequest) {
     }
 }
 
-// POST handler to create a new form
 export async function POST(req: NextRequest) {
     try {
         const authorization = req.headers.get('authorization');
@@ -68,7 +77,7 @@ export async function POST(req: NextRequest) {
             title: title.trim(),
             status: 'Draft',
             createdAt: Timestamp.now(),
-            fields: [], // Initialize with an empty fields array
+            fields: [],
             submissionsCount: 0,
         });
 

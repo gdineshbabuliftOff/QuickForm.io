@@ -1,17 +1,17 @@
-// In your file for the publish endpoint (e.g., /api/forms/[formId]/publish)
 import { db, auth } from '@/lib/firebaseAdmin';
 import { NextRequest, NextResponse } from 'next/server';
 import { Timestamp } from 'firebase-admin/firestore';
 
-export async function POST(request: NextRequest) {
+const PUBLISH_HISTORY_LIMIT = 20;
+
+export async function POST(request: NextRequest, context: { params: { formId: string } }) {
+    const { formId } = context.params;
+
+    if (!formId) {
+        return NextResponse.json({ error: 'Form ID is missing' }, { status: 400 });
+    }
+
     try {
-        const pathname = request.nextUrl.pathname;
-        const formId = pathname.split('/')[3]; 
-
-        if (!formId) {
-            return NextResponse.json({ error: 'Form ID is missing' }, { status: 400 });
-        }
-
         const authorization = request.headers.get('authorization');
         if (!authorization || !authorization.startsWith('Bearer ')) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -21,49 +21,66 @@ export async function POST(request: NextRequest) {
         const decodedToken = await auth.verifyIdToken(token);
         const { uid } = decodedToken;
 
-        const formState = await request.json(); 
+        const formState = await request.json();
+        const { title, pages, styles, settings } = formState;
+
+        if (!title || !pages || !styles || !settings) {
+            return NextResponse.json({ error: 'Incomplete form data. Missing required fields.' }, { status: 400 });
+        }
         
         const formRef = db.collection('users').doc(uid).collection('forms').doc(formId);
-        
-        // --- ADD THIS LINE ---
-        // Create a reference to the new public document
         const publicFormRef = db.collection('publishedForms').doc(formId);
+        const historyCollectionRef = formRef.collection('publishHistory');
 
-        const batch = db.batch();
+        await db.runTransaction(async (transaction) => {
+            const historyQuery = historyCollectionRef.orderBy('publishedAt', 'asc');
+            const historySnapshot = await transaction.get(historyQuery);
+            
+            const formUpdateData = {
+                title,
+                pages,
+                styles,
+                settings,
+                updatedAt: Timestamp.now(),
+                hasPublishedVersion: true,
+                status: 'Published',
+            };
+            transaction.update(formRef, formUpdateData);
 
-        // 1. Update the private form document (your existing logic)
-        const formUpdateData = {
-            ...formState,
-            updatedAt: Timestamp.now(),
-            hasPublishedVersion: true,
-        };
-        batch.update(formRef, formUpdateData);
-
-        // 2. Add to private publishHistory (your existing logic)
-        const historyRef = formRef.collection('publishHistory').doc();
-        batch.set(historyRef, {
-            ...formState,
-            publishedAt: Timestamp.now()
+            const publishHistoryData = {
+                title,
+                pages,
+                styles,
+                settings,
+                publishedAt: Timestamp.now(),
+                status: 'Published',
+            };
+            const newHistoryRef = historyCollectionRef.doc();
+            transaction.set(newHistoryRef, publishHistoryData);
+            
+            const publicFormData = {
+                owner: uid,
+                title: formState.title,
+                pages: formState.pages,
+                styles: formState.styles,
+                settings: formState.settings,
+                publishedAt: Timestamp.now(),
+                status: 'Published',
+            };
+            transaction.set(publicFormRef, publicFormData, { merge: true });
+            
+            if (historySnapshot.size >= PUBLISH_HISTORY_LIMIT) {
+                const excessCount = historySnapshot.size - PUBLISH_HISTORY_LIMIT + 1;
+                for (let i = 0; i < excessCount; i++) {
+                    transaction.delete(historySnapshot.docs[i].ref);
+                }
+            }
         });
         
-        // --- ADD THIS BLOCK ---
-        // 3. Create/overwrite the document in the public collection
-        const publicFormData = {
-            owner: uid, // IMPORTANT: For linking submissions back to the owner
-            title: formState.title,
-            fields: formState.fields,
-            styles: formState.styles,
-            settings: formState.settings,
-            publishedAt: Timestamp.now(),
-        };
-        batch.set(publicFormRef, publicFormData, { merge: true });
-        
-        await batch.commit();
-
-        return NextResponse.json({ message: 'Form published successfully and public version created' });
+        return NextResponse.json({ message: 'Form published successfully' });
 
     } catch (error: any) {
-        console.error(`Error publishing form:`, error.message);
+        console.error(`Error publishing form ${formId}:`, error.message);
         if (error.code === 'auth/id-token-expired') {
             return NextResponse.json({ error: 'Authentication token has expired.' }, { status: 401 });
         }

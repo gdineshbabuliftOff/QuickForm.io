@@ -1,4 +1,3 @@
-// Location: app/api/forms/[formId]/update-live-version/route.ts
 import { db, auth } from '@/lib/firebaseAdmin';
 import { NextRequest, NextResponse } from 'next/server';
 import { Timestamp } from 'firebase-admin/firestore';
@@ -21,29 +20,31 @@ export async function POST(request: NextRequest, { params }: { params: { formId:
         const { uid } = decodedToken;
 
         const formState = await request.json();
+        const { title, pages, styles, settings } = formState;
 
-        // 1. Get a reference to the public document
+        if (!title || !pages || !styles || !settings) {
+            return NextResponse.json({ error: 'Incomplete form data. Missing required fields.' }, { status: 400 });
+        }
+        
         const publicFormRef = db.collection('publishedForms').doc(formId);
         const publicFormDoc = await publicFormRef.get();
 
-        // 2. Check if the form has been published before
         if (!publicFormDoc.exists) {
-            // If the form isn't published, there's no live version to update.
-            // This is not an error, so we can return a success response.
-            return NextResponse.json({ message: 'No live version to update.' });
+            return NextResponse.json({ message: 'No live version to update. Please publish the form first.' }, { status: 404 });
         }
 
-        // 3. Verify that the user making the request is the owner of the form
         const publicFormData = publicFormDoc.data();
         if (publicFormData?.owner !== uid) {
             return NextResponse.json({ error: 'Forbidden: You do not own this form.' }, { status: 403 });
         }
 
-        // 4. Update the live version with the latest form state
         const liveUpdateData = {
-            ...formState,
-            owner: uid, // Ensure owner field is preserved
-            updatedAt: Timestamp.now(), // Add/update an 'updatedAt' timestamp
+            owner: uid,
+            title,
+            pages,
+            styles,
+            settings,
+            updatedAt: Timestamp.now(),
         };
 
         await publicFormRef.set(liveUpdateData, { merge: true });

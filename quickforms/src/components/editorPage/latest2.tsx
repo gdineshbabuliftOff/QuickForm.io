@@ -885,10 +885,10 @@ export default function EditorPage() {
             if (!res.ok) throw new Error("Failed to save.");
             const savedFormState = JSON.parse(JSON.stringify(form));
             setLastDraftState(savedFormState);
-            showNotification('Form saved successfully.', 'success');
+            showNotification(form.settings.submitSuccessMessage, 'success');
         } catch (error) {
             console.error("Failed to save form:", error);
-            showNotification('Failed to save the form.', 'error');
+            showNotification(form.settings.submitErrorMessage, 'error');
         }
         finally { setSaving(false); }
     };
@@ -916,13 +916,13 @@ export default function EditorPage() {
             setLastPublishedState(publishedFormState);
             updateForm({ hasPublishedVersion: true });
             setShowPublishModal(true);
-            showNotification('Form published successfully!', 'success');
+            showNotification(form.settings.submitSuccessMessage, 'success');
 
             await updateLiveVersion(publishedFormState);
 
         } catch (error) {
             console.error("Failed to publish form:", error);
-            showNotification('An error occurred while publishing.', 'error');
+            showNotification(form.settings.submitErrorMessage, 'error');
         } finally {
             setPublishing(false);
         }
@@ -1569,7 +1569,7 @@ const Canvas: FC<{
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className={`w-full mt-6 flex items-center mb-5 ${buttonAlignmentClasses[effectiveButtonPosition]}`}>
+                                        <div className={`w-full mt-6 flex items-center ${buttonAlignmentClasses[effectiveButtonPosition]}`}>
                                             <button type="submit" style={{ backgroundColor: effectiveButtonBackgroundColor, color: effectiveButtonTextColor, width: effectiveButtonWidth, height: effectiveButtonHeight }} className="font-bold py-2 px-4 rounded-lg cursor-pointer flex items-center justify-center">
                                                 {renderSubmitButtonContent()}
                                             </button>
@@ -2032,10 +2032,10 @@ const PropertiesPanel: FC<{
                             
                             <Accordion title="Button Styles">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Submit Button Position</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Navigation Button Position</label>
                                     {form.pages.length > 1 && (
                                         <p className="text-xs text-gray-400 mb-2">
-                                            This setting only applies to the submit button on single-page forms. Multi-page forms have fixed button positions.
+                                            This setting applies to single-page forms only. Multi-page forms have fixed button positions.
                                         </p>
                                     )}
                                     <div className={`flex items-center gap-2 rounded-lg bg-gray-800 p-1 ${form.pages.length > 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
@@ -2160,6 +2160,7 @@ const PropertiesPanel: FC<{
                                         </>
                                     )}
                                 </Accordion>
+                                ---
                                 <Accordion title="Thank You Page" defaultOpen>
                                     <div className="flex items-center justify-between">
                                         <label htmlFor="enableThankYouPage" className="text-sm font-medium text-gray-300">Enable Thank You Page</label>
@@ -2190,11 +2191,12 @@ const PropertiesPanel: FC<{
                                         </>
                                     )}
                                 </Accordion>
+                                ---
                                 <Accordion title="API Integrations">
-                                    <div className="flex items-center justify-between pt-2"><label htmlFor="prefill" className="text-sm font-medium text-gray-300">Prefill from API</label><input id="prefill" type="checkbox" checked={form.settings.prefillFromAPI || false} onChange={e => onUpdateFormSettings({ prefillFromAPI: e.target.checked })} className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500" /></div>
-                                    {form.settings.prefillFromAPI && (<div><label className="block text-sm font-medium text-gray-400 mb-1">API Endpoint URL</label><input type="text" value={form.settings.prefillApiUrl || ''} onChange={e => onUpdateFormSettings({ prefillApiUrl: e.target.value })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" placeholder="https://api.example.com/data" /><p className="text-xs text-gray-500 mt-1">The user&apos;s ID will be appended as a query parameter.</p></div>)}
-                                    <div className="flex items-center justify-between pt-2"><label htmlFor="postOnSubmit" className="text-sm font-medium text-gray-300">POST to API on Submit</label><input id="postOnSubmit" type="checkbox" checked={form.settings.postOnSubmit || false} onChange={e => onUpdateFormSettings({ postOnSubmit: e.target.checked })} className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500" /></div>
-                                    {form.settings.postOnSubmit && (<div><label className="block text-sm font-medium text-gray-400 mb-1">API Endpoint URL</label><input type="text" value={form.settings.postApiUrl || ''} onChange={e => onUpdateFormSettings({ postApiUrl: e.target.value })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" placeholder="https://api.example.com/submit" /></div>)}
+                                    <div className="flex items-center justify-between pt-2"><label htmlFor="prefill" className="text-sm font-medium text-gray-300">Prefill from API</label><input id="prefill" type="checkbox" checked={form.settings.prefillFromAPI || false} onChange={e => props.onUpdateForm({ settings: { ...form.settings, prefillFromAPI: e.target.checked } })} className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500" /></div>
+                                    {form.settings.prefillFromAPI && (<div><label className="block text-sm font-medium text-gray-400 mb-1">API Endpoint URL</label><input type="text" value={form.settings.prefillApiUrl || ''} onChange={e => props.onUpdateForm({ settings: { ...form.settings, prefillApiUrl: e.target.value } })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" placeholder="https://api.example.com/data" /><p className="text-xs text-gray-500 mt-1">The user&apos;s ID will be appended as a query parameter.</p></div>)}
+                                    <div className="flex items-center justify-between pt-2"><label htmlFor="postOnSubmit" className="text-sm font-medium text-gray-300">POST to API on Submit</label><input id="postOnSubmit" type="checkbox" checked={form.settings.postOnSubmit || false} onChange={e => props.onUpdateForm({ settings: { ...form.styles, ...form.settings, postOnSubmit: e.target.checked } })} className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500" /></div>
+                                    {form.settings.postOnSubmit && (<div><label className="block text-sm font-medium text-gray-400 mb-1">API Endpoint URL</label><input type="text" value={form.settings.postApiUrl || ''} onChange={e => props.onUpdateForm({ settings: { ...form.settings, postApiUrl: e.target.value } })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" placeholder="https://api.example.com/submit" /></div>)}
                                 </Accordion>
                         </div>
                     )}
@@ -2203,7 +2205,6 @@ const PropertiesPanel: FC<{
         </aside>
     );
 };
-
 
 const HistoryPanel: FC<{
     onClose: () => void;

@@ -60,7 +60,7 @@ interface IconProps {
     fill?: string;
 }
 type IconPathTuple = [keyof JSX.IntrinsicElements, { [key: string]: any }];
-type FieldType = 'text' | 'email' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'heading' | 'paragraph' | 'date' | 'file' | 'signature' | 'section' | 'hr' | 'ordered-list' | 'unordered-list' | 'number' | 'password' | 'range' | 'tel' | 'url' | 'color' | 'time' | 'month' | 'week' | 'address' | 'name' | 'rating' | 'image' | 'button';
+type FieldType = 'text' | 'email' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'heading' | 'paragraph' | 'date' | 'file' | 'signature' | 'section' | 'hr' | 'ordered-list' | 'unordered-list' | 'number' | 'password' | 'range' | 'tel' | 'url' | 'color' | 'time' | 'month' | 'week' | 'address' | 'name' | 'rating' | 'image';
 type FieldWidth = '100%' | '50%' | '33.33%' | 'custom';
 type PreviewMode = 'desktop' | 'tablet' | 'mobile';
 type ConditionOperator = 'equals' | 'not_equals' | 'contains' | 'is_empty' | 'is_not_empty';
@@ -82,7 +82,7 @@ interface FormSettings { prefillFromAPI: boolean; prefillApiUrl: string; postOnS
 interface FieldOption { label: string; value: string; }
 interface FieldCondition { id: string; fieldId: string; operator: ConditionOperator; value: string; }
 interface RequiredCondition { enabled: boolean; logic: ConditionLogic; conditions: FieldCondition[]; }
-interface FormField { id: string; type: FieldType; label: string; width: FieldWidth; name?: string; fieldId?: string; placeholder?: string; value?: string; required?: boolean; requiredErrorMessage?: string; requiredConditions?: RequiredCondition; options?: FieldOption[]; layout?: 'vertical' | 'horizontal'; styles: FieldStyles; conditions?: FieldCondition[]; conditionLogic?: ConditionLogic; fields?: FormField[]; min?: number; max?: number; step?: number; maxRating?: number; src?: string; actionType?: 'link' | 'submit' | 'reset'; linkUrl?: string; linkTarget?: '_blank' | '_self'; }
+interface FormField { id: string; type: FieldType; label: string; width: FieldWidth; name?: string; fieldId?: string; placeholder?: string; value?: string; required?: boolean; requiredErrorMessage?: string; requiredConditions?: RequiredCondition; options?: FieldOption[]; layout?: 'vertical' | 'horizontal'; styles: FieldStyles; conditions?: FieldCondition[]; conditionLogic?: ConditionLogic; fields?: FormField[]; min?: number; max?: number; step?: number; maxRating?: number; src?: string; }
 interface FormPage { id: string; name: string; fields: FormField[]; styles: Partial<FormStyles>; }
 interface Form { id: string; title: string; pages: FormPage[]; styles: FormStyles; settings: FormSettings; hasPublishedVersion?: boolean; }
 
@@ -91,7 +91,6 @@ const createIcon = (path: IconPathTuple[]): (({ displayName }: { displayName: st
     Component.displayName = `LucideIcon(${displayName})`;
     return Component;
 };
-const MousePointerClickIcon = createIcon([["path", { d: "m9 9 5 12 1.8-5.2L21 14Z" }], ["path", { d: "M7.2 2.2 8 3.1" }], ["path", { d: "m5.1 4.2 1 1" }], ["path", { d: "M2.2 7.2l1.9-.1" }], ["path", { d: "m4.2 5.1 1-1" }], ["path", { d: "m14.3 17.6 2.1 2.1" }], ["path", { d: "m12.3 20.6 2.6-2.6" }]])({ displayName: 'MousePointerClick' });
 const HomeIcon = createIcon([['path', { d: "m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" }], ['polyline', { points: "9 22 9 12 15 12 15 22" }]])({ displayName: 'Home' });
 const UserIcon = createIcon([['path', { d: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" }], ['circle', { cx: "12", cy: "7", r: "4" }]])({ displayName: 'User' });
 const StarIcon = createIcon([['polygon', { points: "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" }]])({ displayName: 'Star' });
@@ -222,44 +221,43 @@ const fieldTypes: { type: FieldType; label: string; icon: FC<IconProps> }[] = [
     { type: 'signature', label: 'Signature', icon: SignatureIcon },
     { type: 'rating', label: 'Rating', icon: StarIcon },
     { type: 'image', label: 'Image', icon: ImageIcon },
-    { type: 'button', label: 'Button', icon: MousePointerClickIcon },
     { type: 'hr', label: 'Horizontal Line', icon: HrIcon },
 ];
 
 const defaultFieldStyles: FieldStyles = { color: '#000000', backgroundColor: 'transparent', borderColor: '', fontSize: '16px', fontWeight: 'normal', textAlign: 'left', padding: '1rem', listStyleType: 'disc', custom: [], controlStyle: 'default', desktop: { width: '100%', fontSize: '16px', height: 'auto', display: 'block' }, tablet: { width: '100%', fontSize: '15px', height: 'auto', display: 'block' }, mobile: { width: '100%', fontSize: '14px', height: 'auto', display: 'block' } };
 const defaultSettings: FormSettings = { prefillFromAPI: false, prefillApiUrl: '', postOnSubmit: false, postApiUrl: '', loader: { type: 'default' }, submitSuccessMessage: 'Form submitted successfully!', submitErrorMessage: 'There was an error submitting your form.', submitLoader: { type: 'default', color: '#FFFFFF' }, enableThankYouPage: false, thankYouPageContent: [{ id: `ty_heading_${Date.now()}`, type: 'heading', label: 'Thank You!', width: '100%', styles: { ...defaultFieldStyles, color: '#000000' } }, { id: `ty_paragraph_${Date.now() + 1}`, type: 'paragraph', label: 'Your submission has been received.', width: '100%', styles: { ...defaultFieldStyles, color: '#000000' } }], pageTracker: 'none', pageTrackerColor: '#4F46E5', pageTrackerBgColor: '#E5E7EB' };
-const defaultStyles: FormStyles = { backgroundType: 'color', backgroundColor: '#FFFFFF', backgroundImage: '', textColor: '#000000', fieldBackgroundColor: 'transparent', fieldBorderColor: '#D1D5DB', buttonBackgroundColor: '#4F46E5', buttonTextColor: '#FFFFFF', buttonText: 'Submit', buttonPosition: 'right', buttonWidth: 'auto', buttonHeight: 'auto', gap: 16, nextButtonText: 'Next', nextButtonBackgroundColor: '#4F46E5', nextButtonTextColor: '#FFFFFF', nextButtonWidth: 'auto', nextButtonHeight: 'auto', prevButtonText: 'Previous', prevButtonBackgroundColor: '#6B7280', prevButtonTextColor: '#FFFFFF', prevButtonWidth: 'auto', prevButtonHeight: 'auto', formAlignment: 'center', desktop: {}, tablet: {}, mobile: {} };
+const defaultStyles: FormStyles = { backgroundType: 'color', backgroundColor: '#FFFFFF', backgroundImage: '', textColor: '#000000', fieldBackgroundColor: 'transparent', fieldBorderColor: '#D1D5DB', buttonBackgroundColor: '#4F46E5', buttonTextColor: '#FFFFFF', buttonText: 'Submit', buttonPosition: 'left', buttonWidth: 'auto', buttonHeight: 'auto', gap: 16, nextButtonText: 'Next', nextButtonBackgroundColor: '#4F46E5', nextButtonTextColor: '#FFFFFF', nextButtonWidth: 'auto', nextButtonHeight: 'auto', prevButtonText: 'Previous', prevButtonBackgroundColor: '#6B7280', prevButtonTextColor: '#FFFFFF', prevButtonWidth: 'auto', prevButtonHeight: 'auto', formAlignment: 'center', desktop: {}, tablet: {}, mobile: {} };
 
 const commonCssProperties = [
     {
-        label: 'Text & Font',
-        options: [
-            { value: 'color', label: 'Color' }, { value: 'fontFamily', label: 'Font Family' }, { value: 'fontSize', label: 'Font Size' }, { value: 'fontStyle', label: 'Font Style' }, { value: 'fontWeight', label: 'Font Weight' }, { value: 'letterSpacing', label: 'Letter Spacing' }, { value: 'lineHeight', label: 'Line Height' }, { value: 'textAlign', label: 'Text Align' }, { value: 'textDecoration', label: 'Text Decoration' }, { value: 'textShadow', label: 'Text Shadow' }, { value: 'textTransform', label: 'Text Transform' }, { value: 'whiteSpace', label: 'White Space' },
-        ],
+      label: 'Text & Font',
+      options: [
+        { value: 'color', label: 'Color' }, { value: 'fontFamily', label: 'Font Family' }, { value: 'fontSize', label: 'Font Size' }, { value: 'fontStyle', label: 'Font Style' }, { value: 'fontWeight', label: 'Font Weight' }, { value: 'letterSpacing', label: 'Letter Spacing' }, { value: 'lineHeight', label: 'Line Height' }, { value: 'textAlign', label: 'Text Align' }, { value: 'textDecoration', label: 'Text Decoration' }, { value: 'textShadow', label: 'Text Shadow' }, { value: 'textTransform', label: 'Text Transform' }, { value: 'whiteSpace', label: 'White Space' },
+      ],
     },
     {
-        label: 'Background & Borders',
-        options: [
-            { value: 'background', label: 'Background' }, { value: 'backgroundColor', label: 'Background Color' }, { value: 'backgroundImage', label: 'Background Image' }, { value: 'backgroundPosition', label: 'Background Position' }, { value: 'backgroundRepeat', label: 'Background Repeat' }, { value: 'backgroundSize', label: 'Background Size' }, { value: 'border', label: 'Border (All)' }, { value: 'borderBottom', label: 'Border Bottom' }, { value: 'borderColor', label: 'Border Color' }, { value: 'borderLeft', label: 'Border Left' }, { value: 'borderRadius', label: 'Border Radius' }, { value: 'borderRight', label: 'Border Right' }, { value: 'borderStyle', label: 'Border Style' }, { value: 'borderTop', label: 'Border Top' }, { value: 'borderWidth', label: 'Border Width' }, { value: 'boxShadow', label: 'Box Shadow' }, { value: 'outline', label: 'Outline' },
-        ],
+      label: 'Background & Borders',
+      options: [
+        { value: 'background', label: 'Background' }, { value: 'backgroundColor', label: 'Background Color' }, { value: 'backgroundImage', label: 'Background Image' }, { value: 'backgroundPosition', label: 'Background Position' }, { value: 'backgroundRepeat', label: 'Background Repeat' }, { value: 'backgroundSize', label: 'Background Size' }, { value: 'border', label: 'Border (All)' }, { value: 'borderBottom', label: 'Border Bottom' }, { value: 'borderColor', label: 'Border Color' }, { value: 'borderLeft', label: 'Border Left' }, { value: 'borderRadius', label: 'Border Radius' }, { value: 'borderRight', label: 'Border Right' }, { value: 'borderStyle', label: 'Border Style' }, { value: 'borderTop', label: 'Border Top' }, { value: 'borderWidth', label: 'Border Width' }, { value: 'boxShadow', label: 'Box Shadow' }, { value: 'outline', label: 'Outline' },
+      ],
     },
     {
-        label: 'Box Model & Sizing',
-        options: [
-            { value: 'height', label: 'Height' }, { value: 'width', label: 'Width' }, { value: 'maxHeight', label: 'Max Height' }, { value: 'maxWidth', label: 'Max Width' }, { value: 'minHeight', label: 'Min Height' }, { value: 'minWidth', label: 'Min Width' }, { value: 'margin', label: 'Margin (All)' }, { value: 'marginBottom', label: 'Margin Bottom' }, { value: 'marginLeft', label: 'Margin Left' }, { value: 'marginRight', label: 'Margin Right' }, { value: 'marginTop', label: 'Margin Top' }, { value: 'padding', label: 'Padding (All)' }, { value: 'paddingBottom', label: 'Padding Bottom' }, { value: 'paddingLeft', label: 'Padding Left' }, { value: 'paddingRight', label: 'Padding Right' }, { value: 'paddingTop', label: 'Padding Top' },
-        ],
+      label: 'Box Model & Sizing',
+      options: [
+        { value: 'height', label: 'Height' }, { value: 'width', label: 'Width' }, { value: 'maxHeight', label: 'Max Height' }, { value: 'maxWidth', label: 'Max Width' }, { value: 'minHeight', label: 'Min Height' }, { value: 'minWidth', label: 'Min Width' }, { value: 'margin', label: 'Margin (All)' }, { value: 'marginBottom', label: 'Margin Bottom' }, { value: 'marginLeft', label: 'Margin Left' }, { value: 'marginRight', label: 'Margin Right' }, { value: 'marginTop', label: 'Margin Top' }, { value: 'padding', label: 'Padding (All)' }, { value: 'paddingBottom', label: 'Padding Bottom' }, { value: 'paddingLeft', label: 'Padding Left' }, { value: 'paddingRight', label: 'Padding Right' }, { value: 'paddingTop', label: 'Padding Top' },
+      ],
     },
     {
-        label: 'Layout & Display',
-        options: [
-            { value: 'display', label: 'Display' }, { value: 'position', label: 'Position' }, { value: 'top', label: 'Top' }, { value: 'right', label: 'Right' }, { value: 'bottom', label: 'Bottom' }, { value: 'left', label: 'Left' }, { value: 'zIndex', label: 'Z-Index' }, { value: 'overflow', label: 'Overflow' }, { value: 'cursor', label: 'Cursor' }, { value: 'opacity', label: 'Opacity' },
-        ],
+      label: 'Layout & Display',
+      options: [
+        { value: 'display', label: 'Display' }, { value: 'position', label: 'Position' }, { value: 'top', label: 'Top' }, { value: 'right', label: 'Right' }, { value: 'bottom', label: 'Bottom' }, { value: 'left', label: 'Left' }, { value: 'zIndex', label: 'Z-Index' }, { value: 'overflow', label: 'Overflow' }, { value: 'cursor', label: 'Cursor' }, { value: 'opacity', label: 'Opacity' },
+      ],
     },
     {
-        label: 'Transforms & Transitions',
-        options: [
-            { value: 'transform', label: 'Transform' }, { value: 'transformOrigin', label: 'Transform Origin' }, { value: 'transition', label: 'Transition' },
-        ],
+      label: 'Transforms & Transitions',
+      options: [
+        { value: 'transform', label: 'Transform' }, { value: 'transformOrigin', label: 'Transform Origin' }, { value: 'transition', label: 'Transition' },
+      ],
     },
 ];
 
@@ -589,7 +587,7 @@ export default function EditorPage() {
     const addField = (type: FieldType, sectionId?: string, toThankYouPage: boolean = false) => {
         if (!form) return;
         const hasOptions = ['select', 'radio', 'checkbox', 'ordered-list', 'unordered-list'].includes(type);
-        const newField: FormField = { id: `field_${Date.now()}`, type, label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`, name: `field_${Date.now()}`, fieldId: `field_${Date.now()}`, placeholder: '', required: false, requiredErrorMessage: '', options: hasOptions ? [{ label: 'List Item 1', value: 'item_1' }] : [], layout: 'vertical', width: '100%', styles: { ...defaultFieldStyles, textAlign: 'center' }, conditions: [], conditionLogic: 'and', requiredConditions: { enabled: false, logic: 'and', conditions: [] }, fields: ['section', 'address', 'name'].includes(type) ? [] : undefined, };
+        const newField: FormField = { id: `field_${Date.now()}`, type, label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`, name: `field_${Date.now()}`, fieldId: `field_${Date.now()}`, placeholder: '', required: false, requiredErrorMessage: '', options: hasOptions ? [{ label: 'List Item 1', value: 'item_1' }] : [], layout: 'vertical', width: '100%', styles: { ...defaultFieldStyles }, conditions: [], conditionLogic: 'and', requiredConditions: { enabled: false, logic: 'and', conditions: [] }, fields: ['section', 'address', 'name'].includes(type) ? [] : undefined, };
 
         const createSubField = (label: string, width: FieldWidth = '100%'): FormField => {
             const subId = `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -621,15 +619,6 @@ export default function EditorPage() {
         } else if (type === 'image') {
             newField.src = 'https://via.placeholder.com/400x200';
             newField.label = 'Descriptive Label';
-        } else if (type === 'button') {
-            newField.label = 'Click Me';
-            newField.actionType = 'link';
-            newField.linkUrl = '#';
-            newField.linkTarget = '_self';
-            newField.styles.backgroundColor = '#4F46E5';
-            newField.styles.color = '#FFFFFF';
-            newField.styles.fontWeight = 'bold';
-            newField.styles.desktop.height = '40px';
         }
 
         if (toThankYouPage) {
@@ -885,10 +874,10 @@ export default function EditorPage() {
             if (!res.ok) throw new Error("Failed to save.");
             const savedFormState = JSON.parse(JSON.stringify(form));
             setLastDraftState(savedFormState);
-            showNotification('Form saved successfully.', 'success');
+            showNotification(form.settings.submitSuccessMessage, 'success');
         } catch (error) {
             console.error("Failed to save form:", error);
-            showNotification('Failed to save the form.', 'error');
+            showNotification(form.settings.submitErrorMessage, 'error');
         }
         finally { setSaving(false); }
     };
@@ -916,13 +905,13 @@ export default function EditorPage() {
             setLastPublishedState(publishedFormState);
             updateForm({ hasPublishedVersion: true });
             setShowPublishModal(true);
-            showNotification('Form published successfully!', 'success');
+            showNotification(form.settings.submitSuccessMessage, 'success');
 
             await updateLiveVersion(publishedFormState);
 
         } catch (error) {
             console.error("Failed to publish form:", error);
-            showNotification('An error occurred while publishing.', 'error');
+            showNotification(form.settings.submitErrorMessage, 'error');
         } finally {
             setPublishing(false);
         }
@@ -1297,12 +1286,6 @@ const Canvas: FC<{
     const effectivePrevButtonBackgroundColor = pageStyles.prevButtonBackgroundColor || form.styles.prevButtonBackgroundColor;
     const effectivePrevButtonTextColor = pageStyles.prevButtonTextColor || form.styles.prevButtonTextColor;
 
-    const buttonAlignmentClasses = {
-        left: 'justify-start',
-        center: 'justify-center',
-        right: 'justify-end',
-    };
-
     const renderField = (field: FormField): JSX.Element | null => {
         const responsiveStyles = field.styles?.[previewMode] || {};
         const baseStyles = field.styles || {};
@@ -1389,7 +1372,7 @@ const Canvas: FC<{
                                             {i === 0 && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
                                         </div>
                                     ) : (
-                                        <input type="radio" name={field.name} value={opt.value} checked={i === 0} readOnly className="h-4 w-4 border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500" />
+                                            <input type="radio" name={field.name} value={opt.value} checked={i === 0} readOnly className="h-4 w-4 border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500" />
                                     )}
                                     <span style={{ color: field.styles?.color }}>{opt.label}</span>
                                 </div>
@@ -1408,14 +1391,7 @@ const Canvas: FC<{
                 return <ul className={ulClasses} style={fieldStyles}>{field.options?.map((opt, i) => <li key={i}>{opt.label}</li>)}</ul>;
             }
             case 'image':
-                return <img src={field.src || 'https://via.placeholder.com/400x200'} alt={field.label} style={{ ...fieldStyles, width: '100%', objectFit: 'cover' }} />;
-            
-            case 'button':
-                return (
-                    <button type="button" style={{ ...fieldStyles, width: '100%' }} className="flex items-center justify-center rounded-lg px-3 py-2">
-                        {field.label}
-                    </button>
-                );
+                return <img src={field.src || 'https://via.placeholder.com/400x200'} alt={field.label} style={{...fieldStyles, width: '100%', height: 'auto', objectFit: 'cover' }} />;
             
             case 'rating':
                 return (
@@ -1493,6 +1469,11 @@ const Canvas: FC<{
         const currentPageNum = currentPageIndex + 1;
         const progress = (currentPageNum / totalPages) * 100;
 
+        const trackerStyle: React.CSSProperties = {
+            color: form.settings.pageTrackerColor,
+            backgroundColor: form.settings.pageTrackerBgColor,
+        };
+
         return (
             <div className="w-full mb-4 flex flex-col items-center gap-2">
                 {(form.settings.pageTracker === 'numbers' || form.settings.pageTracker === 'both') && (
@@ -1506,6 +1487,7 @@ const Canvas: FC<{
             </div>
         );
     };
+
 
     return (
         <div className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-8 flex" style={{ justifyContent: effectiveFormAlignment, ... (effectiveBackgroundType === 'image' ? { backgroundImage: `url(${effectiveBackgroundImage})`, backgroundSize: 'cover' } : { backgroundColor: effectiveBackgroundColor }) }}>
@@ -1547,34 +1529,24 @@ const Canvas: FC<{
                                        <DraggableField key={field.id} field={field} index={index} formStyles={form.styles} previewMode={previewMode} selectedField={selectedField} onFieldSelect={onFieldSelect} onFieldDelete={onFieldDelete} />
                                     ))}
                                     {provided.placeholder}
-                                    {form.pages.length > 1 ? (
-                                        <div className="w-full mt-6 flex justify-between items-center">
-                                            <div>
-                                                {!isFirstPage && (
-                                                    <button type="button" onClick={onPrevPage} style={{ backgroundColor: effectivePrevButtonBackgroundColor, color: effectivePrevButtonTextColor, width: effectivePrevButtonWidth, height: effectivePrevButtonHeight }} className="font-bold py-2 px-4 rounded-lg cursor-pointer">
-                                                        {effectivePrevButtonText}
-                                                    </button>
-                                                )}
-                                            </div>
-                                            <div>
-                                                {!isLastPage ? (
-                                                    <button type="button" onClick={onNextPage} style={{ backgroundColor: effectiveNextButtonBackgroundColor, color: effectiveNextButtonTextColor, width: effectiveNextButtonWidth, height: effectiveNextButtonHeight }} className="font-bold py-2 px-4 rounded-lg cursor-pointer">
-                                                        {effectiveNextButtonText}
-                                                    </button>
-                                                ) : (
-                                                    <button type="submit" style={{ backgroundColor: effectiveButtonBackgroundColor, color: effectiveButtonTextColor, width: effectiveButtonWidth, height: effectiveButtonHeight }} className="font-bold py-2 px-4 rounded-lg cursor-pointer flex items-center justify-center">
-                                                        {renderSubmitButtonContent()}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className={`w-full mt-6 flex items-center mb-5 ${buttonAlignmentClasses[effectiveButtonPosition]}`}>
+                                    <div className="w-full mt-4 flex justify-between items-center" style={{ justifyContent: effectiveButtonPosition === 'center' ? 'center' : (effectiveButtonPosition === 'right' ? 'flex-end' : 'flex-start') }}>
+                                        {!isFirstPage && (
+                                            <button type="button" onClick={onPrevPage} style={{ backgroundColor: effectivePrevButtonBackgroundColor, color: effectivePrevButtonTextColor, width: effectivePrevButtonWidth, height: effectivePrevButtonHeight }} className="font-bold py-2 px-4 rounded-lg cursor-pointer">
+                                                {effectivePrevButtonText}
+                                            </button>
+                                        )}
+                                        <div style={{ flexGrow: 1 }} />
+                                        {!isLastPage && (
+                                            <button type="button" onClick={onNextPage} style={{ backgroundColor: effectiveNextButtonBackgroundColor, color: effectiveNextButtonTextColor, width: effectiveNextButtonWidth, height: effectiveNextButtonHeight }} className="font-bold py-2 px-4 rounded-lg cursor-pointer">
+                                                {effectiveNextButtonText}
+                                            </button>
+                                        )}
+                                        {isLastPage && (
                                             <button type="submit" style={{ backgroundColor: effectiveButtonBackgroundColor, color: effectiveButtonTextColor, width: effectiveButtonWidth, height: effectiveButtonHeight }} className="font-bold py-2 px-4 rounded-lg cursor-pointer flex items-center justify-center">
                                                 {renderSubmitButtonContent()}
                                             </button>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </Droppable>
@@ -1606,7 +1578,7 @@ const PropertiesPanel: FC<{
     const { selectedField, form, currentPage, onUpdateField, onUpdatePage, onUpdateForm, onUpdateFormSettings, previewMode, onUpdateFieldResponsiveStyle, onUpdateFormResponsiveStyle, addField, onFieldDelete } = props;
     const [activeGlobalTab, setActiveGlobalTab] = useState<'style' | 'settings' | 'page-style'>('style');
     const [activeFieldTab, setActiveFieldTab] = useState<'properties' | 'style' | 'logic'>('properties');
-    const noValidationFields = ['heading', 'paragraph', 'hr', 'section', 'address', 'name', 'image', 'rating', 'button'];
+    const noValidationFields = ['heading', 'paragraph', 'hr', 'section', 'address', 'name', 'image', 'rating'];
 
     const handleUpdateCustomStyle = (index: number, part: 'name' | 'value', value: string) => {
         if (!selectedField) return;
@@ -1720,33 +1692,7 @@ const PropertiesPanel: FC<{
                                         <div><label className="block text-sm font-medium text-gray-400 mb-1">Field ID</label><input type="text" value={selectedField.fieldId || ''} onChange={e => props.onUpdateField(selectedField.id, { fieldId: e.target.value })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" /></div>
                                     </>)}
                                 </Accordion>
-                                {selectedField.type === 'button' && (
-                                    <Accordion title="Action" defaultOpen>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-400 mb-1">Button Action</label>
-                                            <select value={selectedField.actionType || 'link'} onChange={e => props.onUpdateField(selectedField.id, { actionType: e.target.value as 'link' | 'submit' | 'reset' })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2">
-                                                <option value="link">Open Link</option>
-                                                <option value="submit">Submit Form</option>
-                                                <option value="reset">Reset Form</option>
-                                            </select>
-                                        </div>
-                                        {selectedField.actionType === 'link' && (
-                                            <>
-                                                <div className="mt-2">
-                                                    <label className="block text-sm font-medium text-gray-400 mb-1">Link URL</label>
-                                                    <input type="text" value={selectedField.linkUrl || ''} onChange={e => props.onUpdateField(selectedField.id, { linkUrl: e.target.value })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" placeholder="https://example.com" />
-                                                </div>
-                                                <div className="mt-2">
-                                                    <label className="block text-sm font-medium text-gray-400 mb-1">Target</label>
-                                                    <select value={selectedField.linkTarget || '_self'} onChange={e => props.onUpdateField(selectedField.id, { linkTarget: e.target.value as '_blank' | '_self' })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2">
-                                                        <option value="_self">Same Tab</option>
-                                                        <option value="_blank">New Tab</option>
-                                                    </select>
-                                                </div>
-                                            </>
-                                        )}
-                                    </Accordion>
-                                )}
+
                                 {['select', 'radio', 'checkbox', 'ordered-list', 'unordered-list'].includes(selectedField.type) && (
                                     <Accordion title="Options" defaultOpen>
                                         {selectedField.options?.map((opt, index) => (
@@ -1902,7 +1848,7 @@ const PropertiesPanel: FC<{
                                     <div className="flex items-center justify-between"><label className="text-sm capitalize">Font Size ({props.previewMode})</label><input type="text" value={selectedField.styles?.[props.previewMode]?.fontSize || ''} onChange={e => props.onUpdateFieldResponsiveStyle(selectedField.id, { fontSize: e.target.value }, props.previewMode)} className="w-2/3 bg-gray-700 border border-white/10 rounded-lg px-3 py-1" placeholder="e.g., 16px" /></div>
                                     <div className="flex items-center justify-between"><label className="text-sm">Font Weight</label><input type="text" value={selectedField.styles?.fontWeight || ''} onChange={e => props.onUpdateFieldBaseStyle(selectedField.id, { fontWeight: e.target.value })} className="w-2/3 bg-gray-700 border border-white/10 rounded-lg px-3 py-1" placeholder="e.g., bold" /></div>
                                     <div className="flex items-center justify-between"><label className="text-sm">Color</label><input type="color" value={selectedField.styles?.color || '#000000'} onChange={e => props.onUpdateFieldBaseStyle(selectedField.id, { color: e.target.value })} className="p-1 h-8 w-14 block bg-gray-700 border border-white/10 cursor-pointer rounded-lg" /></div>
-                                    {(['heading', 'paragraph', 'button'].includes(selectedField.type)) && (
+                                    {(selectedField.type === 'heading' || selectedField.type === 'paragraph') && (
                                         <div>
                                             <label className="block text-sm font-medium text-gray-400 mb-2">Text Align</label>
                                             <div className="flex items-center gap-2 rounded-lg bg-gray-700 p-1">
@@ -2031,21 +1977,9 @@ const PropertiesPanel: FC<{
                             </Accordion>
                             
                             <Accordion title="Button Styles">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Submit Button Position</label>
-                                    {form.pages.length > 1 && (
-                                        <p className="text-xs text-gray-400 mb-2">
-                                            This setting only applies to the submit button on single-page forms. Multi-page forms have fixed button positions.
-                                        </p>
-                                    )}
-                                    <div className={`flex items-center gap-2 rounded-lg bg-gray-800 p-1 ${form.pages.length > 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                        <button onClick={() => onUpdateForm({ styles: { ...form.styles, buttonPosition: 'left' }})} disabled={form.pages.length > 1} className={`flex-1 p-2 rounded-md ${form.styles.buttonPosition === 'left' ? 'bg-indigo-600' : 'hover:bg-gray-700'}`}><AlignLeftIcon size={16} /></button>
-                                        <button onClick={() => onUpdateForm({ styles: { ...form.styles, buttonPosition: 'center' }})} disabled={form.pages.length > 1} className={`flex-1 p-2 rounded-md ${form.styles.buttonPosition === 'center' ? 'bg-indigo-600' : 'hover:bg-gray-700'}`}><AlignCenterIcon size={16} /></button>
-                                        <button onClick={() => onUpdateForm({ styles: { ...form.styles, buttonPosition: 'right' }})} disabled={form.pages.length > 1} className={`flex-1 p-2 rounded-md ${form.styles.buttonPosition === 'right' ? 'bg-indigo-600' : 'hover:bg-gray-700'}`}><AlignRightIcon size={16} /></button>
-                                    </div>
-                                </div>
-                                <h3 className="text-md font-bold text-white pt-4">Submit Button</h3>
+                                <h3 className="text-md font-bold text-white">Submit Button</h3>
                                 <div><label className="block text-sm font-medium text-gray-400 mb-1">Button Text</label><input type="text" value={form.styles.buttonText} onChange={e => props.onUpdateForm({ styles: { ...form.styles, buttonText: e.target.value } })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" /></div>
+                                <div><label className="block text-sm font-medium text-gray-400 mb-1">Button Position</label><select value={form.styles.buttonPosition} onChange={e => props.onUpdateForm({ styles: { ...form.styles, buttonPosition: e.target.value as 'left' | 'center' | 'right' } })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></div>
                                 <div className="flex items-center justify-between"><label className="text-sm capitalize">Width ({previewMode})</label><input type="text" value={responsiveGlobalStyles.buttonWidth ?? form.styles.buttonWidth} onChange={e => onUpdateFormResponsiveStyle({ buttonWidth: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="e.g., auto or 150px" /></div>
                                 <div className="flex items-center justify-between"><label className="text-sm capitalize">Height ({previewMode})</label><input type="text" value={responsiveGlobalStyles.buttonHeight ?? form.styles.buttonHeight} onChange={e => onUpdateFormResponsiveStyle({ buttonHeight: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="e.g., auto or 40px" /></div>
                                 <div className="flex items-center justify-between"><label className="text-sm">Button Background</label><input type="color" value={form.styles.buttonBackgroundColor} onChange={e => props.onUpdateForm({ styles: { ...form.styles, buttonBackgroundColor: e.target.value } })} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
@@ -2077,7 +2011,7 @@ const PropertiesPanel: FC<{
                     )}
                     {activeGlobalTab === 'settings' && (
                         <div className="space-y-4">
-                                <Accordion title="Submission Messages">
+                               <Accordion title="Submission Messages">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-400 mb-1">Success Message</label>
                                         <input type="text" value={form.settings.submitSuccessMessage || ''} onChange={e => onUpdateFormSettings({ submitSuccessMessage: e.target.value })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" placeholder="Form submitted successfully!" />
@@ -2087,7 +2021,7 @@ const PropertiesPanel: FC<{
                                         <input type="text" value={form.settings.submitErrorMessage || ''} onChange={e => onUpdateFormSettings({ submitErrorMessage: e.target.value })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" placeholder="There was an error submitting your form." />
                                     </div>
                                </Accordion>
-                                <Accordion title="Submit Button Loader">
+                               <Accordion title="Submit Button Loader">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-400 mb-1">Loader Style</label>
                                         <select
@@ -2131,8 +2065,8 @@ const PropertiesPanel: FC<{
                                             <input type="color" value={form.settings.submitLoader?.color || '#FFFFFF'} onChange={e => onUpdateFormSettings({ submitLoader: { ...form.settings.submitLoader, color: e.target.value } } as Partial<FormSettings>)} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" />
                                         </div>
                                     )}
-                                </Accordion>
-                                <Accordion title="Page Tracking">
+                               </Accordion>
+                               <Accordion title="Page Tracking">
                                 <p className="text-sm text-gray-400 mb-2">Display progress for multi-page forms.</p>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-400 mb-1">Page Tracker Type</label>
@@ -2160,6 +2094,7 @@ const PropertiesPanel: FC<{
                                         </>
                                     )}
                                 </Accordion>
+                                ---
                                 <Accordion title="Thank You Page" defaultOpen>
                                     <div className="flex items-center justify-between">
                                         <label htmlFor="enableThankYouPage" className="text-sm font-medium text-gray-300">Enable Thank You Page</label>
@@ -2190,12 +2125,13 @@ const PropertiesPanel: FC<{
                                         </>
                                     )}
                                 </Accordion>
-                                <Accordion title="API Integrations">
-                                    <div className="flex items-center justify-between pt-2"><label htmlFor="prefill" className="text-sm font-medium text-gray-300">Prefill from API</label><input id="prefill" type="checkbox" checked={form.settings.prefillFromAPI || false} onChange={e => onUpdateFormSettings({ prefillFromAPI: e.target.checked })} className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500" /></div>
-                                    {form.settings.prefillFromAPI && (<div><label className="block text-sm font-medium text-gray-400 mb-1">API Endpoint URL</label><input type="text" value={form.settings.prefillApiUrl || ''} onChange={e => onUpdateFormSettings({ prefillApiUrl: e.target.value })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" placeholder="https://api.example.com/data" /><p className="text-xs text-gray-500 mt-1">The user&apos;s ID will be appended as a query parameter.</p></div>)}
-                                    <div className="flex items-center justify-between pt-2"><label htmlFor="postOnSubmit" className="text-sm font-medium text-gray-300">POST to API on Submit</label><input id="postOnSubmit" type="checkbox" checked={form.settings.postOnSubmit || false} onChange={e => onUpdateFormSettings({ postOnSubmit: e.target.checked })} className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500" /></div>
-                                    {form.settings.postOnSubmit && (<div><label className="block text-sm font-medium text-gray-400 mb-1">API Endpoint URL</label><input type="text" value={form.settings.postApiUrl || ''} onChange={e => onUpdateFormSettings({ postApiUrl: e.target.value })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" placeholder="https://api.example.com/submit" /></div>)}
-                                </Accordion>
+                                ---
+                            <Accordion title="API Integrations">
+                                <div className="flex items-center justify-between pt-2"><label htmlFor="prefill" className="text-sm font-medium text-gray-300">Prefill from API</label><input id="prefill" type="checkbox" checked={form.settings.prefillFromAPI || false} onChange={e => props.onUpdateForm({ settings: { ...form.settings, prefillFromAPI: e.target.checked } })} className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500" /></div>
+                                {form.settings.prefillFromAPI && (<div><label className="block text-sm font-medium text-gray-400 mb-1">API Endpoint URL</label><input type="text" value={form.settings.prefillApiUrl || ''} onChange={e => props.onUpdateForm({ settings: { ...form.settings, prefillApiUrl: e.target.value } })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" placeholder="https://api.example.com/data" /><p className="text-xs text-gray-500 mt-1">The user&apos;s ID will be appended as a query parameter.</p></div>)}
+                                <div className="flex items-center justify-between pt-2"><label htmlFor="postOnSubmit" className="text-sm font-medium text-gray-300">POST to API on Submit</label><input id="postOnSubmit" type="checkbox" checked={form.settings.postOnSubmit || false} onChange={e => props.onUpdateForm({ settings: { ...form.settings, postOnSubmit: e.target.checked } })} className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500" /></div>
+                                {form.settings.postOnSubmit && (<div><label className="block text-sm font-medium text-gray-400 mb-1">API Endpoint URL</label><input type="text" value={form.settings.postApiUrl || ''} onChange={e => props.onUpdateForm({ settings: { ...form.settings, postApiUrl: e.target.value } })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" placeholder="https://api.example.com/submit" /></div>)}
+                            </Accordion>
                         </div>
                     )}
                 </div>
@@ -2203,7 +2139,6 @@ const PropertiesPanel: FC<{
         </aside>
     );
 };
-
 
 const HistoryPanel: FC<{
     onClose: () => void;
