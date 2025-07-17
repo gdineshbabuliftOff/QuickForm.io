@@ -246,7 +246,7 @@ export default function App(): JSX.Element {
             <Link href="/#features" className="text-gray-300 hover:text-indigo-400 transition-colors">Features</Link>
             <Link href="/#templates" className="text-gray-300 hover:text-indigo-400 transition-colors">Templates</Link>
             <Link href="/solutions" className="text-gray-300 hover:text-indigo-400 transition-colors">Solutions</Link>
-            <Link href="/pricing" className="text-gray-300 hover:text-indigo-400 transition-colors">Pricing</Link>
+            <Link href="/pricing" className="text-gray-300 hover:text-indigo-400 transition-colors">Pricing</Link> {/* Added Pricing link */}
             <Link href="/resources" className="text-gray-300 hover:text-indigo-400 transition-colors">Resources</Link>
           </nav>
           <div className="flex items-center space-x-2">

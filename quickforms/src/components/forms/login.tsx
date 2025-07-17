@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState } from 'react';
-import { AuthLayout } from './AuthLayout';
 import { useRouter } from 'next/navigation';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, User } from "firebase/auth";
 import Cookies from 'js-cookie';
 import { auth } from '@/lib/firebase';
-import { updateUserDocument } from '@/lib/db';
+import { getUserDocument, updateUserDocument } from '@/lib/db';
+import { AuthLayout } from './AuthLayout';
+import RedirectModal from '../modals/PricingModal';
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string()
@@ -21,6 +22,8 @@ const LoginSchema = Yup.object().shape({
 const LoginPage = () => {
     const router = useRouter();
     const [apiError, setApiError] = useState<string>('');
+    const [showRedirectModal, setShowRedirectModal] = useState(false);
+    const [modalContent, setModalContent] = useState({ title: '', message: '', buttonText: '', redirectPath: '' });
 
     const navigateTo = (path: string) => {
         router.push(path);
@@ -37,22 +40,44 @@ const LoginPage = () => {
         localStorage.setItem('userDetails', JSON.stringify(userDetails));
         Cookies.set('firebaseIdToken', token, { expires: 1 });
 
-        router.push('/dashboard');
+        // Fetch user document to check premium status
+        const userDoc = await getUserDocument(user.uid);
+        const isPremium = userDoc?.isPremium || false; // Default to false if not set
+
+        if (isPremium) {
+            setModalContent({
+                title: 'Welcome Back!',
+                message: 'You are a premium user. Redirecting to your dashboard.',
+                buttonText: 'Go to Dashboard',
+                redirectPath: '/dashboard'
+            });
+        } else {
+            setModalContent({
+                title: 'Welcome!',
+                message: 'You are currently on the free plan. Upgrade to unlock more features!',
+                buttonText: 'View Pricing Plans',
+                redirectPath: '/pricing'
+            });
+        }
+        setShowRedirectModal(true);
+    };
+
+    const handleModalRedirect = () => {
+        router.push(modalContent.redirectPath);
     };
 
     const handleGoogleSignIn = async () => {
         setApiError('');
-        const provider = new GoogleAuthProvider();
         try {
+            const provider = new GoogleAuthProvider();
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
 
             // Use the reusable function to update the user document
-            await updateUserDocument(user);
+            await updateUserDocument(user); // This will fetch/create and update if necessary
 
             await handleSuccessfulSignIn(user);
-        } catch (error: any)
-{
+        } catch (error: any) {
             console.error("Google Sign-In Error:", error);
             setApiError(error.message || 'Failed to sign in with Google.');
         }
@@ -95,7 +120,7 @@ const LoginPage = () => {
                         const user = userCredential.user;
                         
                         // Use the reusable function here as well
-                        await updateUserDocument(user);
+                        await updateUserDocument(user); // This will fetch/create and update if necessary
                         
                         await handleSuccessfulSignIn(user);
 
@@ -130,6 +155,15 @@ const LoginPage = () => {
             <p className="text-center text-gray-600 mt-6">
                 Don&apos;t have an account? <button onClick={() => navigateTo('/signup')} className="text-indigo-600 hover:underline font-medium cursor-pointer">Sign Up</button>
             </p>
+
+            <RedirectModal
+                isOpen={showRedirectModal}
+                onClose={() => setShowRedirectModal(false)}
+                title={modalContent.title}
+                message={modalContent.message}
+                buttonText={modalContent.buttonText}
+                onButtonClick={handleModalRedirect}
+            />
         </AuthLayout>
     );
 };

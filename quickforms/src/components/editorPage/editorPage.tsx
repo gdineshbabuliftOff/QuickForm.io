@@ -69,20 +69,34 @@ type ConditionLogic = 'and' | 'or';
 type ListStyleType = 'disc' | 'circle' | 'square' | 'decimal' | 'lower-alpha' | 'upper-alpha' | 'lower-roman' | 'upper-roman' | 'none';
 interface NotificationType { message: string; type: 'success' | 'error'; visible: boolean; }
 interface CustomStyle { name: string; value: string; }
-type ControlStyle = 'default' | 'filled' | 'switch' | 'line-through';
+type ControlStyle = 'default' | 'filled' | 'switch' | 'line-through' | 'toggle' | 'outline' | 'ghost';
 
 interface ResponsiveFieldStyles { width?: FieldWidth | string; fontSize?: string; height?: string; display?: 'block' | 'none'; }
 interface FieldStyles { color?: string; backgroundColor?: string; borderColor?: string; fontSize?: string; fontWeight?: string; textAlign?: TextAlign; padding?: string; listStyleType?: ListStyleType; custom?: CustomStyle[]; controlStyle?: ControlStyle; desktop: ResponsiveFieldStyles; tablet: ResponsiveFieldStyles; mobile: ResponsiveFieldStyles; }
-interface ResponsiveGlobalStyles { gap?: number; buttonWidth?: string; buttonHeight?: string; nextButtonWidth?: string; nextButtonHeight?: string; prevButtonWidth?: string; prevButtonHeight?: string; }
+interface ResponsiveGlobalStyles {
+    gap?: number;
+    buttonWidth?: string;
+    buttonHeight?: string;
+    buttonBackgroundColor?: string;
+    buttonTextColor?: string;
+    nextButtonWidth?: string;
+    nextButtonHeight?: string;
+    nextButtonBackgroundColor?: string;
+    nextButtonTextColor?: string;
+    prevButtonWidth?: string;
+    prevButtonHeight?: string;
+    prevButtonBackgroundColor?: string;
+    prevButtonTextColor?: string;
+}
 interface FormStyles { backgroundType: 'color' | 'image'; backgroundColor: string; backgroundImage: string; textColor: string; fieldBackgroundColor: string; fieldBorderColor: string; buttonBackgroundColor: string; buttonTextColor: string; buttonText: string; buttonPosition: 'left' | 'center' | 'right'; buttonWidth: string; buttonHeight: string; gap: number; nextButtonText: string; nextButtonBackgroundColor: string; nextButtonTextColor: string; nextButtonWidth: string; nextButtonHeight: string; prevButtonText: string; prevButtonBackgroundColor: string; prevButtonTextColor: string; prevButtonWidth: string; prevButtonHeight: string; formAlignment?: 'start' | 'center' | 'end'; desktop: ResponsiveGlobalStyles; tablet: ResponsiveGlobalStyles; mobile: ResponsiveGlobalStyles; }
 interface LoaderSettings { type: 'default' | 'dots' | 'spinner' | 'bar' | 'pulse' | 'custom'; url?: string; color?: string; }
-type PageTrackerType = 'none' | 'numbers' | 'progress-bar' | 'both';
+type PageTrackerType = 'none' | 'numbers' | 'progress-bar' | 'both' | 'names';
 interface FormSettings { prefillFromAPI: boolean; prefillApiUrl: string; postOnSubmit: boolean; postApiUrl: string; loader?: LoaderSettings; submitSuccessMessage: string; submitErrorMessage: string; submitLoader?: LoaderSettings; enableThankYouPage: boolean; thankYouPageContent: FormField[]; pageTracker: PageTrackerType; pageTrackerColor: string; pageTrackerBgColor: string; }
 
 interface FieldOption { label: string; value: string; }
 interface FieldCondition { id: string; fieldId: string; operator: ConditionOperator; value: string; }
 interface RequiredCondition { enabled: boolean; logic: ConditionLogic; conditions: FieldCondition[]; }
-interface FormField { id: string; type: FieldType; label: string; width: FieldWidth; name?: string; fieldId?: string; placeholder?: string; value?: string; required?: boolean; requiredErrorMessage?: string; requiredConditions?: RequiredCondition; options?: FieldOption[]; layout?: 'vertical' | 'horizontal'; styles: FieldStyles; conditions?: FieldCondition[]; conditionLogic?: ConditionLogic; fields?: FormField[]; min?: number; max?: number; step?: number; maxRating?: number; src?: string; actionType?: 'link' | 'submit' | 'reset'; linkUrl?: string; linkTarget?: '_blank' | '_self'; }
+interface FormField { id: string; type: FieldType; label: string; width: FieldWidth; name?: string; fieldId?: string; placeholder?: string; value?: string; required?: boolean; disabled?: boolean; requiredErrorMessage?: string; requiredConditions?: RequiredCondition; options?: FieldOption[]; layout?: 'vertical' | 'horizontal'; styles: FieldStyles; conditions?: FieldCondition[]; conditionLogic?: ConditionLogic; fields?: FormField[]; min?: number; max?: number; step?: number; maxRating?: number; src?: string; actionType?: 'link' | 'submit' | 'reset'; linkUrl?: string; linkTarget?: '_blank' | '_self'; }
 interface FormPage { id: string; name: string; fields: FormField[]; styles: Partial<FormStyles>; }
 interface Form { id: string; title: string; pages: FormPage[]; styles: FormStyles; settings: FormSettings; hasPublishedVersion?: boolean; }
 
@@ -589,14 +603,14 @@ export default function EditorPage() {
     const addField = (type: FieldType, sectionId?: string, toThankYouPage: boolean = false) => {
         if (!form) return;
         const hasOptions = ['select', 'radio', 'checkbox', 'ordered-list', 'unordered-list'].includes(type);
-        const newField: FormField = { id: `field_${Date.now()}`, type, label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`, name: `field_${Date.now()}`, fieldId: `field_${Date.now()}`, placeholder: '', required: false, requiredErrorMessage: '', options: hasOptions ? [{ label: 'List Item 1', value: 'item_1' }] : [], layout: 'vertical', width: '100%', styles: { ...defaultFieldStyles, textAlign: 'center' }, conditions: [], conditionLogic: 'and', requiredConditions: { enabled: false, logic: 'and', conditions: [] }, fields: ['section', 'address', 'name'].includes(type) ? [] : undefined, };
+        const newField: FormField = { id: `field_${Date.now()}`, type, label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`, name: `field_${Date.now()}`, fieldId: `field_${Date.now()}`, placeholder: '', required: false, disabled: false, requiredErrorMessage: '', options: hasOptions ? [{ label: 'List Item 1', value: 'item_1' }] : [], layout: 'vertical', width: '100%', styles: { ...defaultFieldStyles, textAlign: 'center' }, conditions: [], conditionLogic: 'and', requiredConditions: { enabled: false, logic: 'and', conditions: [] }, fields: ['section', 'address', 'name'].includes(type) ? [] : undefined, };
 
         const createSubField = (label: string, width: FieldWidth = '100%'): FormField => {
             const subId = `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             return {
                 id: subId, type: 'text', label, name: `${label.toLowerCase().replace(/[\s/]+/g, '_')}_${Date.now()}`, fieldId: subId, width,
                 styles: { ...defaultFieldStyles, desktop: {...defaultFieldStyles.desktop, width}, tablet: {...defaultFieldStyles.tablet, width}, mobile: {...defaultFieldStyles.mobile, width: '100%'} },
-                required: false, requiredErrorMessage: '', conditions: [], conditionLogic: 'and', requiredConditions: { enabled: false, logic: 'and', conditions: [] },
+                required: false, disabled: false, requiredErrorMessage: '', conditions: [], conditionLogic: 'and', requiredConditions: { enabled: false, logic: 'and', conditions: [] },
             };
         };
 
@@ -1272,30 +1286,37 @@ const Canvas: FC<{
     const pageStyles = currentPage.styles || {};
     const responsiveGlobalStyles = form.styles[previewMode] || {};
     
+    // Determine effective styles by layering: Responsive Global -> Page -> Global
     const effectiveBackgroundType = pageStyles.backgroundType || form.styles.backgroundType;
     const effectiveBackgroundColor = pageStyles.backgroundColor || form.styles.backgroundColor;
     const effectiveBackgroundImage = pageStyles.backgroundImage || form.styles.backgroundImage;
     const effectiveTextColor = pageStyles.textColor || form.styles.textColor;
 
-    const effectiveGap = responsiveGlobalStyles.gap ?? form.styles.gap;
-    const effectiveButtonWidth = responsiveGlobalStyles.buttonWidth ?? form.styles.buttonWidth;
-    const effectiveButtonHeight = responsiveGlobalStyles.buttonHeight ?? form.styles.buttonHeight;
-    const effectiveNextButtonWidth = responsiveGlobalStyles.nextButtonWidth ?? form.styles.nextButtonWidth;
-    const effectiveNextButtonHeight = responsiveGlobalStyles.nextButtonHeight ?? form.styles.nextButtonHeight;
-    const effectivePrevButtonWidth = responsiveGlobalStyles.prevButtonWidth ?? form.styles.prevButtonWidth;
-    const effectivePrevButtonHeight = responsiveGlobalStyles.prevButtonHeight ?? form.styles.prevButtonHeight;
+    const effectiveGap = responsiveGlobalStyles.gap ?? pageStyles.gap ?? form.styles.gap;
     const effectiveFormAlignment = form.styles.formAlignment || 'center';
 
-    const effectiveButtonBackgroundColor = pageStyles.buttonBackgroundColor || form.styles.buttonBackgroundColor;
-    const effectiveButtonTextColor = pageStyles.buttonTextColor || form.styles.buttonTextColor;
+    // Button text is not responsive, so it's layered Page -> Global
     const effectiveButtonText = pageStyles.buttonText || form.styles.buttonText;
-    const effectiveButtonPosition = pageStyles.buttonPosition || form.styles.buttonPosition;
     const effectiveNextButtonText = pageStyles.nextButtonText || form.styles.nextButtonText;
-    const effectiveNextButtonBackgroundColor = pageStyles.nextButtonBackgroundColor || form.styles.nextButtonBackgroundColor;
-    const effectiveNextButtonTextColor = pageStyles.nextButtonTextColor || form.styles.nextButtonTextColor;
     const effectivePrevButtonText = pageStyles.prevButtonText || form.styles.prevButtonText;
-    const effectivePrevButtonBackgroundColor = pageStyles.prevButtonBackgroundColor || form.styles.prevButtonBackgroundColor;
-    const effectivePrevButtonTextColor = pageStyles.prevButtonTextColor || form.styles.prevButtonTextColor;
+    const effectiveButtonPosition = pageStyles.buttonPosition || form.styles.buttonPosition;
+
+    // Responsive styles for buttons (Width, Height, Colors)
+    const effectiveButtonWidth = responsiveGlobalStyles.buttonWidth ?? pageStyles.buttonWidth ?? form.styles.buttonWidth;
+    const effectiveButtonHeight = responsiveGlobalStyles.buttonHeight ?? pageStyles.buttonHeight ?? form.styles.buttonHeight;
+    const effectiveButtonBackgroundColor = responsiveGlobalStyles.buttonBackgroundColor ?? pageStyles.buttonBackgroundColor ?? form.styles.buttonBackgroundColor;
+    const effectiveButtonTextColor = responsiveGlobalStyles.buttonTextColor ?? pageStyles.buttonTextColor ?? form.styles.buttonTextColor;
+
+    const effectiveNextButtonWidth = responsiveGlobalStyles.nextButtonWidth ?? pageStyles.nextButtonWidth ?? form.styles.nextButtonWidth;
+    const effectiveNextButtonHeight = responsiveGlobalStyles.nextButtonHeight ?? pageStyles.nextButtonHeight ?? form.styles.nextButtonHeight;
+    const effectiveNextButtonBackgroundColor = responsiveGlobalStyles.nextButtonBackgroundColor ?? pageStyles.nextButtonBackgroundColor ?? form.styles.nextButtonBackgroundColor;
+    const effectiveNextButtonTextColor = responsiveGlobalStyles.nextButtonTextColor ?? pageStyles.nextButtonTextColor ?? form.styles.nextButtonTextColor;
+
+    const effectivePrevButtonWidth = responsiveGlobalStyles.prevButtonWidth ?? pageStyles.prevButtonWidth ?? form.styles.prevButtonWidth;
+    const effectivePrevButtonHeight = responsiveGlobalStyles.prevButtonHeight ?? pageStyles.prevButtonHeight ?? form.styles.prevButtonHeight;
+    const effectivePrevButtonBackgroundColor = responsiveGlobalStyles.prevButtonBackgroundColor ?? pageStyles.prevButtonBackgroundColor ?? form.styles.prevButtonBackgroundColor;
+    const effectivePrevButtonTextColor = responsiveGlobalStyles.prevButtonTextColor ?? pageStyles.prevButtonTextColor ?? form.styles.prevButtonTextColor;
+
 
     const buttonAlignmentClasses = {
         left: 'justify-start',
@@ -1325,6 +1346,9 @@ const Canvas: FC<{
             ...customStyles,
         };
         
+        // Add disabled styling
+        const disabledClasses = field.disabled ? 'opacity-50 cursor-not-allowed' : '';
+
         if (fieldStyles.display === 'none') return null;
 
         const controlStyle = field.styles?.controlStyle || 'default';
@@ -1343,23 +1367,23 @@ const Canvas: FC<{
             case 'month':
             case 'week':
             case 'color':
-                return <input type={field.type} placeholder={field.placeholder} style={fieldStyles} min={field.min} max={field.max} step={field.step} className="w-full border rounded-lg px-3 py-2 bg-transparent" readOnly />;
+                return <input type={field.type} placeholder={field.placeholder} style={fieldStyles} min={field.min} max={field.max} step={field.step} className={`w-full border rounded-lg px-3 py-2 bg-transparent ${disabledClasses}`} readOnly disabled={field.disabled} />;
             case 'range':
-                return <div style={{...fieldStyles}}><input type="range" min={field.min} max={field.max} step={field.step} className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer" /></div>;
-            case 'textarea': return <textarea placeholder={field.placeholder} style={fieldStyles} className="w-full border rounded-lg px-3 py-2 bg-transparent" readOnly />;
-            case 'file': return <input type="file" style={{ ...fieldStyles }} className="w-full border rounded-lg px-3 py-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200" readOnly />;
-            case 'select': return <select style={fieldStyles} className="w-full border rounded-lg px-3 py-2 bg-gray-800"><option>{field.placeholder || "Select an option"}</option>{field.options?.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select>;
+                return <div style={{...fieldStyles}}><input type="range" min={field.min} max={field.max} step={field.step} className={`w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer ${disabledClasses}`} disabled={field.disabled} /></div>;
+            case 'textarea': return <textarea placeholder={field.placeholder} style={fieldStyles} className={`w-full border rounded-lg px-3 py-2 bg-transparent ${disabledClasses}`} readOnly disabled={field.disabled} />;
+            case 'file': return <input type="file" style={{ ...fieldStyles }} className={`w-full border rounded-lg px-3 py-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 ${disabledClasses}`} readOnly disabled={field.disabled} />;
+            case 'select': return <select style={fieldStyles} className={`w-full border rounded-lg px-3 py-2 bg-gray-800 ${disabledClasses}`} disabled={field.disabled}><option>{field.placeholder || "Select an option"}</option>{field.options?.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select>;
             case 'checkbox':
                 return (
-                    <div className={`flex gap-x-4 gap-y-2 ${field.layout === 'horizontal' ? 'flex-row flex-wrap' : 'flex-col'}`}>
+                    <div className={`flex gap-x-4 gap-y-2 ${field.layout === 'horizontal' ? 'flex-row flex-wrap' : 'flex-col'} ${disabledClasses}`}>
                         {field.options?.map((opt, i) => {
-                            const isChecked = i === 0;
+                            const isChecked = i === 0; // For preview, just show the first as checked
                             let control;
                             switch (controlStyle) {
                                 case 'switch':
                                     control = (
                                         <label className="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" value="" className="sr-only peer" checked={isChecked} readOnly/>
+                                            <input type="checkbox" value="" className="sr-only peer" checked={isChecked} readOnly disabled={field.disabled}/>
                                             <div className="w-11 h-6 bg-gray-700 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                                         </label>
                                     );
@@ -1367,8 +1391,24 @@ const Canvas: FC<{
                                 case 'filled':
                                     control = (<div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${isChecked ? 'bg-indigo-600 border-indigo-600' : 'bg-gray-700 border-gray-500'}`}>{isChecked && <CheckIcon size={14} className="text-white"/>}</div>);
                                     break;
+                                case 'toggle':
+                                    control = (
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" value="" className="sr-only peer" checked={isChecked} readOnly disabled={field.disabled}/>
+                                            <div className={`w-12 h-6 rounded-full transition-colors ${isChecked ? 'bg-indigo-600' : 'bg-gray-700'} peer-focus:ring-4 peer-focus:ring-blue-800 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-md after:transition-transform peer-checked:after:translate-x-full`}></div>
+                                        </label>
+                                    );
+                                    break;
+                                case 'outline':
+                                    control = (<div className={`w-5 h-5 border-2 rounded ${isChecked ? 'border-indigo-600' : 'border-gray-500'} flex items-center justify-center`}>{isChecked && <CheckIcon size={14} className="text-indigo-600"/>}</div>);
+                                    break;
+                                case 'ghost':
+                                    control = (<div className={`w-5 h-5 rounded flex items-center justify-center ${isChecked ? 'text-indigo-600' : 'text-gray-500'}`}>{isChecked && <CheckIcon size={16}/>}</div>);
+                                    break;
+                                case 'line-through':
+                                case 'default':
                                 default:
-                                    control = (<input type="checkbox" checked={isChecked} readOnly className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500" />);
+                                    control = (<input type="checkbox" checked={isChecked} readOnly disabled={field.disabled} className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500" />);
                             }
                             return (
                                 <div key={i} className="flex items-center gap-2">
@@ -1381,45 +1421,66 @@ const Canvas: FC<{
                 );
             case 'radio': 
                 return (
-                    <div className={`flex gap-x-4 gap-y-2 ${field.layout === 'horizontal' ? 'flex-row flex-wrap' : 'flex-col'}`}>
-                        {field.options?.map((opt, i) => (
+                    <div className={`flex gap-x-4 gap-y-2 ${field.layout === 'horizontal' ? 'flex-row flex-wrap' : 'flex-col'} ${disabledClasses}`}>
+                        {field.options?.map((opt, i) => {
+                            const isChecked = i === 0; // For preview, just show the first as checked
+                            let control;
+                            switch (controlStyle) {
+                                case 'filled':
+                                    control = (<div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center ${isChecked ? 'bg-indigo-600 border-indigo-600' : 'bg-gray-700 border-gray-500'}`}>{isChecked && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}</div>);
+                                    break;
+                                case 'toggle':
+                                    control = (
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input type="radio" value="" name={field.name} className="sr-only peer" checked={isChecked} readOnly disabled={field.disabled}/>
+                                            <div className={`w-12 h-6 rounded-full transition-colors ${isChecked ? 'bg-indigo-600' : 'bg-gray-700'} peer-focus:ring-4 peer-focus:ring-blue-800 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-md after:transition-transform peer-checked:after:translate-x-full`}></div>
+                                        </label>
+                                    );
+                                    break;
+                                case 'outline':
+                                    control = (<div className={`w-5 h-5 border-2 rounded-full ${isChecked ? 'border-indigo-600' : 'border-gray-500'} flex items-center justify-center`}>{isChecked && <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>}</div>);
+                                    break;
+                                case 'ghost':
+                                    control = (<div className={`w-5 h-5 rounded-full flex items-center justify-center ${isChecked ? 'text-indigo-600' : 'text-gray-500'}`}>{isChecked && <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>}</div>);
+                                    break;
+                                case 'line-through':
+                                case 'default':
+                                default:
+                                    control = (<input type="radio" name={field.name} value={opt.value} checked={isChecked} readOnly disabled={field.disabled} className="h-4 w-4 border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500" />);
+                            }
+                            return (
                                 <div key={i} className="flex items-center gap-2">
-                                    {controlStyle === 'filled' ? (
-                                        <div className="w-5 h-5 border-2 border-gray-500 rounded-full flex items-center justify-center bg-gray-700">
-                                            {i === 0 && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
-                                        </div>
-                                    ) : (
-                                        <input type="radio" name={field.name} value={opt.value} checked={i === 0} readOnly className="h-4 w-4 border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500" />
-                                    )}
-                                    <span style={{ color: field.styles?.color }}>{opt.label}</span>
+                                    {control}
+                                    <span style={{ color: field.styles?.color }} className={`${controlStyle === 'line-through' && isChecked ? 'line-through' : ''}`}>{opt.label}</span>
                                 </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 );
-            case 'signature': return <div className="w-full h-32 bg-gray-800/50 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center"><SignatureIcon className="text-gray-500" size={40} /></div>;
-            case 'hr': return <hr className="w-full border-gray-600" style={{ borderColor: baseStyles.color }} />;
+            case 'signature': return <div className={`w-full h-32 bg-gray-800/50 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center ${disabledClasses}`}><SignatureIcon className="text-gray-500" size={40} /></div>;
+            case 'hr': return <hr className={`w-full ${disabledClasses}`} style={fieldStyles} />;
             
             case 'ordered-list': {
                 const olClasses = field.layout === 'horizontal' ? "flex flex-row flex-wrap gap-x-6 gap-y-2" : "space-y-2 list-inside";
-                return <ol className={olClasses} style={fieldStyles}>{field.options?.map((opt, i) => <li key={i}>{opt.label}</li>)}</ol>;
+                return <ol className={`${olClasses} ${disabledClasses}`} style={fieldStyles}>{field.options?.map((opt, i) => <li key={i}>{opt.label}</li>)}</ol>;
             }
             case 'unordered-list': {
                 const ulClasses = field.layout === 'horizontal' ? "flex flex-row flex-wrap gap-x-6 gap-y-2" : "space-y-2 list-inside";
-                return <ul className={ulClasses} style={fieldStyles}>{field.options?.map((opt, i) => <li key={i}>{opt.label}</li>)}</ul>;
+                return <ul className={`${ulClasses} ${disabledClasses}`} style={fieldStyles}>{field.options?.map((opt, i) => <li key={i}>{opt.label}</li>)}</ul>;
             }
             case 'image':
-                return <img src={field.src || 'https://via.placeholder.com/400x200'} alt={field.label} style={{ ...fieldStyles, width: '100%', objectFit: 'cover' }} />;
+                return <img src={field.src || 'https://via.placeholder.com/400x200'} alt={field.label} style={{ ...fieldStyles, width: '100%', objectFit: 'cover' }} className={disabledClasses} />;
             
             case 'button':
                 return (
-                    <button type="button" style={{ ...fieldStyles, width: '100%' }} className="flex items-center justify-center rounded-lg px-3 py-2">
+                    <button type="button" style={{ ...fieldStyles, width: '100%' }} className={`flex items-center justify-center rounded-lg px-3 py-2 ${disabledClasses}`} disabled={field.disabled}>
                         {field.label}
                     </button>
                 );
             
             case 'rating':
                 return (
-                    <div className="flex items-center gap-1" style={{ ...fieldStyles }}>
+                    <div className={`flex items-center gap-1 ${disabledClasses}`} style={{ ...fieldStyles }}>
                         {Array.from({ length: field.maxRating || 5 }, (_, i) => (
                             <StarIcon key={i} size={24} className="text-yellow-400" fill="currentColor" />
                         ))}
@@ -1433,7 +1494,7 @@ const Canvas: FC<{
                 return (
                     <Droppable droppableId={`section-${field.id}`} type="FIELD">
                         {(provided, snapshot) => (
-                            <div {...provided.droppableProps} ref={provided.innerRef} className={`w-full border-2 border-dashed rounded-lg flex flex-wrap ${snapshot.isDraggingOver ? 'border-indigo-500 bg-indigo-900/20' : 'border-gray-700'}`} style={{ ...sectionContainerStyle, rowGap: `${effectiveGap}px`, columnGap: `${effectiveGap}px` }}>
+                            <div {...provided.droppableProps} ref={provided.innerRef} className={`w-full border-2 border-dashed rounded-lg flex flex-wrap ${snapshot.isDraggingOver ? 'border-indigo-500 bg-indigo-900/20' : 'border-gray-700'} ${disabledClasses}`} style={{ ...sectionContainerStyle, rowGap: `${effectiveGap}px`, columnGap: `${effectiveGap}px` }}>
                                 {field.fields && field.fields.length > 0 ? (
                                     field.fields.map((subField, subIndex) => (
                                         <DraggableField key={subField.id} field={subField} index={subIndex} formStyles={form.styles} previewMode={previewMode} selectedField={selectedField} onFieldSelect={onFieldSelect} onFieldDelete={onFieldDelete} />
@@ -1498,7 +1559,16 @@ const Canvas: FC<{
                 {(form.settings.pageTracker === 'numbers' || form.settings.pageTracker === 'both') && (
                     <p className="text-sm" style={{ color: form.styles.textColor }}>Page {currentPageNum} of {totalPages}</p>
                 )}
-                {(form.settings.pageTracker === 'progress-bar' || form.settings.pageTracker === 'both') && (
+                {(form.settings.pageTracker === 'names' || form.settings.pageTracker === 'both') && (
+                     <div className="flex justify-center gap-2 text-sm">
+                        {form.pages.map((page, index) => (
+                            <span key={page.id} className={`font-semibold ${currentPageIndex === index ? 'text-indigo-400' : 'text-gray-400'}`}>
+                                {page.name}
+                            </span>
+                        ))}
+                     </div>
+                )}
+                {(form.settings.pageTracker === 'progress-bar' || form.settings.pageTracker === 'both' || form.settings.pageTracker === 'names') && (
                     <div className="w-full h-2 rounded-full" style={{ backgroundColor: form.settings.pageTrackerBgColor }}>
                         <div className="h-full rounded-full transition-all duration-300" style={{ width: `${progress}%`, backgroundColor: form.settings.pageTrackerColor }}></div>
                     </div>
@@ -1544,7 +1614,7 @@ const Canvas: FC<{
                                         </div>
                                     )}
                                     {currentPage.fields.map((field, index) => (
-                                       <DraggableField key={field.id} field={field} index={index} formStyles={form.styles} previewMode={previewMode} selectedField={selectedField} onFieldSelect={onFieldSelect} onFieldDelete={onFieldDelete} />
+                                        <DraggableField key={field.id} field={field} index={index} formStyles={form.styles} previewMode={previewMode} selectedField={selectedField} onFieldSelect={onFieldSelect} onFieldDelete={onFieldDelete} />
                                     ))}
                                     {provided.placeholder}
                                     {form.pages.length > 1 ? (
@@ -1690,7 +1760,9 @@ const PropertiesPanel: FC<{
             <div className="flex-grow overflow-y-auto pr-2">
                 {selectedField ? (
                     <div className="mb-6">
-                        <h2 className="text-xl font-bold text-white mb-4">Field Editor</h2>
+                        <h2 className="text-xl font-bold text-white mb-4">
+                            Field Editor <span className="text-base font-normal text-gray-400 capitalize">({previewMode})</span>
+                        </h2>
                         <div className="flex border-b border-white/10 mb-4">
                             <button onClick={() => setActiveFieldTab('properties')} className={`flex-1 pb-2 text-sm font-semibold cursor-pointer ${activeFieldTab === 'properties' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-400'}`}>Properties</button>
                             <button onClick={() => setActiveFieldTab('style')} className={`flex-1 pb-2 text-sm font-semibold cursor-pointer ${activeFieldTab === 'style' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-400'}`}>Style</button>
@@ -1773,6 +1845,10 @@ const PropertiesPanel: FC<{
                                 {!noValidationFields.includes(selectedField.type) && (
                                     <Accordion title="Validation">
                                         <div className="flex items-center justify-between">
+                                            <label htmlFor="disabled" className="text-sm font-medium text-gray-300 cursor-pointer">Disable Field</label>
+                                            <input id="disabled" type="checkbox" checked={selectedField.disabled || false} onChange={e => props.onUpdateField(selectedField.id, { disabled: e.target.checked })} className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500 cursor-pointer" />
+                                        </div>
+                                        <div className="flex items-center justify-between mt-4">
                                             <label htmlFor="required" className="text-sm font-medium text-gray-300 cursor-pointer">Required Field</label>
                                             <input id="required" type="checkbox" checked={selectedField.required || false} onChange={e => props.onUpdateField(selectedField.id, { required: e.target.checked })} className="h-4 w-4 rounded text-indigo-600 bg-gray-700 border-gray-600 focus:ring-indigo-500 cursor-pointer" />
                                         </div>
@@ -1826,7 +1902,7 @@ const PropertiesPanel: FC<{
                                         </div>
                                     )}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-1 capitalize">Width ({props.previewMode})</label>
+                                        <label className="block text-sm font-medium text-gray-400 mb-1 capitalize">Width</label>
                                         <div className="flex items-center gap-2">
                                             <select
                                                 value={['100%', '50%', '33.33%'].includes(selectedField.styles?.[props.previewMode]?.width as string) ? selectedField.styles?.[props.previewMode]?.width : 'custom'}
@@ -1857,7 +1933,7 @@ const PropertiesPanel: FC<{
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <label className="text-sm capitalize">Height ({props.previewMode})</label>
+                                        <label className="text-sm capitalize">Height</label>
                                         <input
                                             type="text"
                                             value={selectedField.styles?.[props.previewMode]?.height || ''}
@@ -1867,7 +1943,7 @@ const PropertiesPanel: FC<{
                                         />
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <label className="text-sm capitalize">Display ({props.previewMode})</label>
+                                        <label className="text-sm capitalize">Display</label>
                                         <select
                                             value={selectedField.styles?.[props.previewMode]?.display || 'block'}
                                             onChange={e => props.onUpdateFieldResponsiveStyle(selectedField.id, { display: e.target.value as 'block' | 'none' }, props.previewMode)}
@@ -1899,7 +1975,7 @@ const PropertiesPanel: FC<{
                                             </select>
                                         </div>
                                     )}
-                                    <div className="flex items-center justify-between"><label className="text-sm capitalize">Font Size ({props.previewMode})</label><input type="text" value={selectedField.styles?.[props.previewMode]?.fontSize || ''} onChange={e => props.onUpdateFieldResponsiveStyle(selectedField.id, { fontSize: e.target.value }, props.previewMode)} className="w-2/3 bg-gray-700 border border-white/10 rounded-lg px-3 py-1" placeholder="e.g., 16px" /></div>
+                                    <div className="flex items-center justify-between"><label className="text-sm capitalize">Font Size</label><input type="text" value={selectedField.styles?.[props.previewMode]?.fontSize || ''} onChange={e => props.onUpdateFieldResponsiveStyle(selectedField.id, { fontSize: e.target.value }, props.previewMode)} className="w-2/3 bg-gray-700 border border-white/10 rounded-lg px-3 py-1" placeholder="e.g., 16px" /></div>
                                     <div className="flex items-center justify-between"><label className="text-sm">Font Weight</label><input type="text" value={selectedField.styles?.fontWeight || ''} onChange={e => props.onUpdateFieldBaseStyle(selectedField.id, { fontWeight: e.target.value })} className="w-2/3 bg-gray-700 border border-white/10 rounded-lg px-3 py-1" placeholder="e.g., bold" /></div>
                                     <div className="flex items-center justify-between"><label className="text-sm">Color</label><input type="color" value={selectedField.styles?.color || '#000000'} onChange={e => props.onUpdateFieldBaseStyle(selectedField.id, { color: e.target.value })} className="p-1 h-8 w-14 block bg-gray-700 border border-white/10 cursor-pointer rounded-lg" /></div>
                                     {(['heading', 'paragraph', 'button'].includes(selectedField.type)) && (
@@ -1923,6 +1999,9 @@ const PropertiesPanel: FC<{
                                                 <option value="filled">Filled</option>
                                                 <option value="switch">Switch</option>
                                                 <option value="line-through">Line-through</option>
+                                                <option value="toggle">Toggle</option>
+                                                <option value="outline">Outline</option>
+                                                <option value="ghost">Ghost</option>
                                             </select>
                                         </div>
                                     )}
@@ -1932,6 +2011,10 @@ const PropertiesPanel: FC<{
                                             <select value={selectedField.styles?.controlStyle || 'default'} onChange={e => props.onUpdateFieldBaseStyle(selectedField.id, { controlStyle: e.target.value as ControlStyle })} className="w-2/3 bg-gray-700 border border-white/10 rounded-lg px-3 py-1">
                                                 <option value="default">Default</option>
                                                 <option value="filled">Filled</option>
+                                                <option value="line-through">Line-through</option>
+                                                <option value="toggle">Toggle</option>
+                                                <option value="outline">Outline</option>
+                                                <option value="ghost">Ghost</option>
                                             </select>
                                         </div>
                                     )}
@@ -2027,7 +2110,7 @@ const PropertiesPanel: FC<{
                                 <div><label className="block text-sm font-medium text-gray-400 mb-1">Background Type</label><select value={form.styles.backgroundType} onChange={e => props.onUpdateForm({ styles: { ...form.styles, backgroundType: e.target.value as 'color' | 'image' } })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2"><option value="color">Color</option><option value="image">Image</option></select></div>
                                 {form.styles.backgroundType === 'color' ? (<div className="flex items-center justify-between"><label className="text-sm">Background Color</label><input type="color" value={form.styles.backgroundColor} onChange={e => props.onUpdateForm({ styles: { ...form.styles, backgroundColor: e.target.value } })} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>) : (<div><label className="block text-sm font-medium text-gray-400 mb-1">Background Image URL</label><input type="text" value={form.styles.backgroundImage} onChange={e => props.onUpdateForm({ styles: { ...form.styles, backgroundImage: e.target.value } })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" /></div>)}
                                 <div className="flex items-center justify-between"><label className="text-sm">Text Color</label><input type="color" value={form.styles.textColor} onChange={e => props.onUpdateForm({ styles: { ...form.styles, textColor: e.target.value } })} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Field Gap (px) ({previewMode})</label><input type="number" value={responsiveGlobalStyles.gap ?? form.styles.gap} onChange={e => onUpdateFormResponsiveStyle({ gap: parseInt(e.target.value, 10) || 0 }, previewMode)} className="w-20 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Field Gap (px)</label><input type="number" value={responsiveGlobalStyles.gap ?? form.styles.gap} onChange={e => onUpdateFormResponsiveStyle({ gap: parseInt(e.target.value, 10) || 0 }, previewMode)} className="w-20 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" /></div>
                             </Accordion>
                             
                             <Accordion title="Button Styles">
@@ -2044,25 +2127,25 @@ const PropertiesPanel: FC<{
                                         <button onClick={() => onUpdateForm({ styles: { ...form.styles, buttonPosition: 'right' }})} disabled={form.pages.length > 1} className={`flex-1 p-2 rounded-md ${form.styles.buttonPosition === 'right' ? 'bg-indigo-600' : 'hover:bg-gray-700'}`}><AlignRightIcon size={16} /></button>
                                     </div>
                                 </div>
-                                <h3 className="text-md font-bold text-white pt-4">Submit Button</h3>
+                                <h3 className="text-md font-bold text-white pt-4">Submit Button <span className="text-sm font-normal text-gray-400 capitalize">({previewMode})</span></h3>
                                 <div><label className="block text-sm font-medium text-gray-400 mb-1">Button Text</label><input type="text" value={form.styles.buttonText} onChange={e => props.onUpdateForm({ styles: { ...form.styles, buttonText: e.target.value } })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Width ({previewMode})</label><input type="text" value={responsiveGlobalStyles.buttonWidth ?? form.styles.buttonWidth} onChange={e => onUpdateFormResponsiveStyle({ buttonWidth: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="e.g., auto or 150px" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Height ({previewMode})</label><input type="text" value={responsiveGlobalStyles.buttonHeight ?? form.styles.buttonHeight} onChange={e => onUpdateFormResponsiveStyle({ buttonHeight: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="e.g., auto or 40px" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm">Button Background</label><input type="color" value={form.styles.buttonBackgroundColor} onChange={e => props.onUpdateForm({ styles: { ...form.styles, buttonBackgroundColor: e.target.value } })} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm">Button Text Color</label><input type="color" value={form.styles.buttonTextColor} onChange={e => props.onUpdateForm({ styles: { ...form.styles, buttonTextColor: e.target.value } })} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Width</label><input type="text" value={responsiveGlobalStyles.buttonWidth ?? form.styles.buttonWidth} onChange={e => onUpdateFormResponsiveStyle({ buttonWidth: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="e.g., auto or 150px" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Height</label><input type="text" value={responsiveGlobalStyles.buttonHeight ?? form.styles.buttonHeight} onChange={e => onUpdateFormResponsiveStyle({ buttonHeight: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="e.g., auto or 40px" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm">Background</label><input type="color" value={responsiveGlobalStyles.buttonBackgroundColor ?? form.styles.buttonBackgroundColor} onChange={e => onUpdateFormResponsiveStyle({ buttonBackgroundColor: e.target.value }, previewMode)} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm">Text Color</label><input type="color" value={responsiveGlobalStyles.buttonTextColor ?? form.styles.buttonTextColor} onChange={e => onUpdateFormResponsiveStyle({ buttonTextColor: e.target.value }, previewMode)} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
 
-                                <h3 className="text-md font-bold text-white pt-4">Navigation Buttons</h3>
+                                <h3 className="text-md font-bold text-white pt-4">Navigation Buttons <span className="text-sm font-normal text-gray-400 capitalize">({previewMode})</span></h3>
                                 <div><label className="block text-sm font-medium text-gray-400 mb-1">Next Button Text</label><input type="text" value={form.styles.nextButtonText} onChange={e => props.onUpdateForm({ styles: { ...form.styles, nextButtonText: e.target.value } })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Next Width ({previewMode})</label><input type="text" value={responsiveGlobalStyles.nextButtonWidth ?? form.styles.nextButtonWidth} onChange={e => onUpdateFormResponsiveStyle({ nextButtonWidth: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="auto" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Next Height ({previewMode})</label><input type="text" value={responsiveGlobalStyles.nextButtonHeight ?? form.styles.nextButtonHeight} onChange={e => onUpdateFormResponsiveStyle({ nextButtonHeight: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="auto" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm">Next Button Background</label><input type="color" value={form.styles.nextButtonBackgroundColor} onChange={e => props.onUpdateForm({ styles: { ...form.styles, nextButtonBackgroundColor: e.target.value } })} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm">Next Button Text Color</label><input type="color" value={form.styles.nextButtonTextColor} onChange={e => props.onUpdateForm({ styles: { ...form.styles, nextButtonTextColor: e.target.value } })} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Next Width</label><input type="text" value={responsiveGlobalStyles.nextButtonWidth ?? form.styles.nextButtonWidth} onChange={e => onUpdateFormResponsiveStyle({ nextButtonWidth: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="auto" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Next Height</label><input type="text" value={responsiveGlobalStyles.nextButtonHeight ?? form.styles.nextButtonHeight} onChange={e => onUpdateFormResponsiveStyle({ nextButtonHeight: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="auto" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm">Next Background</label><input type="color" value={responsiveGlobalStyles.nextButtonBackgroundColor ?? form.styles.nextButtonBackgroundColor} onChange={e => onUpdateFormResponsiveStyle({ nextButtonBackgroundColor: e.target.value }, previewMode)} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm">Next Text Color</label><input type="color" value={responsiveGlobalStyles.nextButtonTextColor ?? form.styles.nextButtonTextColor} onChange={e => onUpdateFormResponsiveStyle({ nextButtonTextColor: e.target.value }, previewMode)} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
 
                                 <div className='pt-2'><label className="block text-sm font-medium text-gray-400 mb-1">Previous Button Text</label><input type="text" value={form.styles.prevButtonText} onChange={e => props.onUpdateForm({ styles: { ...form.styles, prevButtonText: e.target.value } })} className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Prev Width ({previewMode})</label><input type="text" value={responsiveGlobalStyles.prevButtonWidth ?? form.styles.prevButtonWidth} onChange={e => onUpdateFormResponsiveStyle({ prevButtonWidth: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="auto" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Prev Height ({previewMode})</label><input type="text" value={responsiveGlobalStyles.prevButtonHeight ?? form.styles.prevButtonHeight} onChange={e => onUpdateFormResponsiveStyle({ prevButtonHeight: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="auto" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm">Previous Button Background</label><input type="color" value={form.styles.prevButtonBackgroundColor} onChange={e => props.onUpdateForm({ styles: { ...form.styles, prevButtonBackgroundColor: e.target.value } })} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
-                                <div className="flex items-center justify-between"><label className="text-sm">Previous Button Text Color</label><input type="color" value={form.styles.prevButtonTextColor} onChange={e => props.onUpdateForm({ styles: { ...form.styles, prevButtonTextColor: e.target.value } })} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Prev Width</label><input type="text" value={responsiveGlobalStyles.prevButtonWidth ?? form.styles.prevButtonWidth} onChange={e => onUpdateFormResponsiveStyle({ prevButtonWidth: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="auto" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm capitalize">Prev Height</label><input type="text" value={responsiveGlobalStyles.prevButtonHeight ?? form.styles.prevButtonHeight} onChange={e => onUpdateFormResponsiveStyle({ prevButtonHeight: e.target.value }, previewMode)} className="w-2/3 bg-gray-800 border border-white/10 rounded-lg px-3 py-1" placeholder="auto" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm">Previous Background</label><input type="color" value={responsiveGlobalStyles.prevButtonBackgroundColor ?? form.styles.prevButtonBackgroundColor} onChange={e => onUpdateFormResponsiveStyle({ prevButtonBackgroundColor: e.target.value }, previewMode)} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
+                                <div className="flex items-center justify-between"><label className="text-sm">Previous Text Color</label><input type="color" value={responsiveGlobalStyles.prevButtonTextColor ?? form.styles.prevButtonTextColor} onChange={e => onUpdateFormResponsiveStyle({ prevButtonTextColor: e.target.value }, previewMode)} className="p-1 h-8 w-14 block bg-gray-800 border border-white/10 cursor-pointer rounded-lg" /></div>
                             </Accordion>
                         </div>
                     )}
@@ -2144,7 +2227,8 @@ const PropertiesPanel: FC<{
                                             <option value="none">None</option>
                                             <option value="numbers">Page Numbers (e.g., 1 of 3)</option>
                                             <option value="progress-bar">Progress Bar</option>
-                                            <option value="both">Both</option>
+                                            <option value="names">Page Names</option>
+                                            <option value="both">Both (Names & Progress Bar)</option>
                                         </select>
                                     </div>
                                     {form.settings.pageTracker !== 'none' && (

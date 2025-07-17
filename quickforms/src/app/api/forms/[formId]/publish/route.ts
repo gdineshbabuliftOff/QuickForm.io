@@ -60,10 +60,10 @@ export async function POST(request: NextRequest, context: { params: { formId: st
             
             const publicFormData = {
                 owner: uid,
-                title: formState.title,
-                pages: formState.pages,
-                styles: formState.styles,
-                settings: formState.settings,
+                title,
+                pages,
+                styles,
+                settings,
                 publishedAt: Timestamp.now(),
                 status: 'Published',
             };
@@ -81,8 +81,8 @@ export async function POST(request: NextRequest, context: { params: { formId: st
 
     } catch (error: any) {
         console.error(`Error publishing form ${formId}:`, error.message);
-        if (error.code === 'auth/id-token-expired') {
-            return NextResponse.json({ error: 'Authentication token has expired.' }, { status: 401 });
+        if (error.code === 'auth/id-token-expired' || error.code === 'auth/argument-error') {
+            return NextResponse.json({ error: 'Authentication token is invalid or has expired.' }, { status: 401 });
         }
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }

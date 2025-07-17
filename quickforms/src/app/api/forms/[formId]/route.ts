@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, context: { params: { formId: str
 
         const authorization = request.headers.get('authorization');
         if (!authorization || !authorization.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({ error: 'Unauthorized: Missing or invalid authorization header' }, { status: 401 });
         }
 
         const token = authorization.split('Bearer ')[1];
@@ -30,8 +30,8 @@ export async function GET(request: NextRequest, context: { params: { formId: str
         return NextResponse.json({ id: formDoc.id, ...formDoc.data() });
     } catch (error: any) {
         console.error(`Error fetching form ${formId}:`, error.message);
-        if (error.code === 'auth/id-token-expired') {
-            return NextResponse.json({ error: 'Authentication token has expired.' }, { status: 401 });
+        if (error.code === 'auth/id-token-expired' || error.code === 'auth/argument-error') {
+            return NextResponse.json({ error: 'Authentication token is invalid or has expired.' }, { status: 401 });
         }
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
@@ -47,17 +47,16 @@ export async function PUT(request: NextRequest, context: { params: { formId: str
 
         const authorization = request.headers.get('authorization');
         if (!authorization || !authorization.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({ error: 'Unauthorized: Missing or invalid authorization header' }, { status: 401 });
         }
 
         const token = authorization.split('Bearer ')[1];
         const decodedToken = await auth.verifyIdToken(token);
         const { uid } = decodedToken;
 
-        const body = await request.json();
-        const { title, pages, styles, settings } = body;
-
-        if (!title || !pages || !styles || !settings) {
+        const formData = await request.json();
+        
+        if (!formData.title || !formData.pages || !formData.styles || !formData.settings) {
             return NextResponse.json({ error: 'Missing required form data fields (title, pages, styles, or settings)' }, { status: 400 });
         }
 
@@ -65,24 +64,23 @@ export async function PUT(request: NextRequest, context: { params: { formId: str
         const historyCollectionRef = formRef.collection('saveHistory');
 
         await db.runTransaction(async (transaction) => {
+            const formUpdateData = {
+                ...formData,
+                updatedAt: Timestamp.now(),
+            };
+            
+            const historyEntryData = {
+                ...formData,
+                savedAt: Timestamp.now(),
+            };
+
             const historyQuery = historyCollectionRef.orderBy('savedAt', 'asc');
             const historySnapshot = await transaction.get(historyQuery);
             
-            const formUpdateData = {
-                title,
-                pages,
-                styles,
-                settings,
-                updatedAt: Timestamp.now(),
-            };
-
             transaction.update(formRef, formUpdateData);
 
             const newHistoryRef = historyCollectionRef.doc();
-            transaction.set(newHistoryRef, {
-                ...formUpdateData,
-                savedAt: Timestamp.now()
-            });
+            transaction.set(newHistoryRef, historyEntryData);
 
             if (historySnapshot.size >= SAVE_HISTORY_LIMIT) {
                 const excessCount = historySnapshot.size - SAVE_HISTORY_LIMIT + 1;
@@ -92,12 +90,12 @@ export async function PUT(request: NextRequest, context: { params: { formId: str
             }
         });
 
-        return NextResponse.json({ message: 'Form updated and history pruned successfully' });
+        return NextResponse.json({ message: 'Form updated and history saved successfully.' });
 
     } catch (error: any) {
         console.error(`Error updating form ${formId}:`, error.message);
-        if (error.code === 'auth/id-token-expired') {
-            return NextResponse.json({ error: 'Authentication token has expired.' }, { status: 401 });
+        if (error.code === 'auth/id-token-expired' || error.code === 'auth/argument-error') {
+            return NextResponse.json({ error: 'Authentication token is invalid or has expired.' }, { status: 401 });
         }
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }

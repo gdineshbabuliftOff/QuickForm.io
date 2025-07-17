@@ -1,24 +1,44 @@
+// lib/db.ts
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from './firebase';
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { User } from "firebase/auth";
+import { User } from 'firebase/auth';
 
-/**
- * Creates or updates a user document in the Firestore 'users' collection.
- * @param {User} user - The Firebase user object.
- * @param {object} additionalData - Optional additional data to merge into the document.
- */
-export const updateUserDocument = async (user: User, additionalData = {}) => {
+export const updateUserDocument = async (user: User, additionalData?: { name?: string }) => {
     if (!user) return;
 
     const userRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userRef);
 
-    const data = {
-        uid: user.uid,
-        email: user.email,
-        name: user.displayName,
-        lastLogin: serverTimestamp(),
-        ...additionalData
-    };
+    if (!userDoc.exists()) {
+        await setDoc(userRef, {
+            uid: user.uid,
+            email: user.email,
+            name: user.displayName || additionalData?.name || null,
+            createdAt: serverTimestamp(),
+            lastLogin: serverTimestamp(),
+            isPremium: false,
+            ...additionalData
+        }, { merge: true });
+    } else {
+        const updateData: { [key: string]: any } = {
+            lastLogin: serverTimestamp(),
+        };
 
-    return await setDoc(userRef, data, { merge: true });
+        if (additionalData?.name && userDoc.data()?.name !== additionalData.name) {
+            updateData.name = additionalData.name;
+        }
+
+        if (userDoc.data()?.isPremium === undefined) {
+             updateData.isPremium = false;
+        }
+        
+        await updateDoc(userRef, updateData);
+    }
+};
+
+export const getUserDocument = async (uid: string) => {
+    if (!uid) return null;
+    const userRef = doc(db, 'users', uid);
+    const userDoc = await getDoc(userRef);
+    return userDoc.exists() ? userDoc.data() : null;
 };
