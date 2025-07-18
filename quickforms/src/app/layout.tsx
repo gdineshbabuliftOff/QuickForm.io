@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import '../globals.css'; // Ensure global styles are imported
+import '../globals.css';
+import { ModalProvider } from '@/context/ModalContext'; // Import your ModalProvider
 
 export const metadata: Metadata = {
   title: "QuickForms.io",
@@ -15,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <ModalProvider> {/* Wrap children with ModalProvider */}
+          {children}
+        </ModalProvider>
       </body>
     </html>
   );

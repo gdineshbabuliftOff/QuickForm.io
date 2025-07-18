@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'; // Import the auth hook
 import { auth } from '@/lib/firebase'; // Import firebase auth for logout
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { useModal } from '@/context/ModalContext'; // Import useModal
 
 interface IconProps {
   color?: string;
@@ -171,12 +172,14 @@ const HorizontalScrollSection: FC = () => {
 
 export default function App(): JSX.Element {
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
-  const { user, loading } = useAuth(); // Use the auth hook
+  // Destructure isPremium from useAuth
+  const { user, loading, isPremium } = useAuth();
   const router = useRouter();
+  const { showModal } = useModal();
 
   const handleLogout = async () => {
     await signOut(auth);
-    router.push('/login'); // Redirect to login after logout
+    router.push('/login');
   };
 
   useEffect(() => {
@@ -188,6 +191,30 @@ export default function App(): JSX.Element {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  // Removed the duplicate routing logic from here.
+  // The global routing is now handled solely by the useAuth hook.
+
+  useEffect(() => {
+    // Ensure window is defined for localStorage access and that auth loading is complete
+    if (typeof window !== 'undefined' && !loading) {
+      const lastVisitDate = localStorage.getItem('lastVisitDate');
+      const today = new Date().toDateString();
+
+      // Condition to show modal:
+      // 1. It's the first visit of the day OR
+      // 2. User is logged in AND is NOT premium
+      if (lastVisitDate !== today || (user && isPremium !== null && !isPremium)) {
+        showModal({
+          title: 'Welcome to QuickForm.io!',
+          message: user && !isPremium ? 'Upgrade your plan to unlock more features!' : 'Discover our powerful features and flexible pricing plans.',
+          onCloseRedirectPath: undefined, // No specific redirect on close for home page
+        });
+        localStorage.setItem('lastVisitDate', today);
+      }
+    }
+  }, [loading, user, isPremium, showModal]); // Added isPremium to dependency array
+
 
   const features: Feature[] = [
     { id: 'feature-builder', icon: <MousePointerClickIcon className="h-8 w-8 text-indigo-400" />, title: 'Intuitive Drag & Drop Builder', description: "Create any form you can imagine. Just drag, drop, and you're done. No code required, ever." },
@@ -246,7 +273,7 @@ export default function App(): JSX.Element {
             <Link href="/#features" className="text-gray-300 hover:text-indigo-400 transition-colors">Features</Link>
             <Link href="/#templates" className="text-gray-300 hover:text-indigo-400 transition-colors">Templates</Link>
             <Link href="/solutions" className="text-gray-300 hover:text-indigo-400 transition-colors">Solutions</Link>
-            <Link href="/pricing" className="text-gray-300 hover:text-indigo-400 transition-colors">Pricing</Link> {/* Added Pricing link */}
+            <Link href="/pricing" className="text-gray-300 hover:text-indigo-400 transition-colors">Pricing</Link>
             <Link href="/resources" className="text-gray-300 hover:text-indigo-400 transition-colors">Resources</Link>
           </nav>
           <div className="flex items-center space-x-2">
@@ -289,7 +316,7 @@ export default function App(): JSX.Element {
                       Go to Your Dashboard
                     </Link>
                   ) : (
-                    <Link href="/signup" className="bg-indigo-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-105 inline-block">
+                    <Link href="/signup" className="bg-indigo-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-indigo-500 transition-transform transform hover:scale-105 inline-block">
                       Create Your First Form — Free
                     </Link>
                   )
@@ -359,7 +386,7 @@ export default function App(): JSX.Element {
               <div className="mt-10">
                 {!loading && (
                   user ? (
-                    <Link href="/dashboard" className="bg-indigo-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-indigo-500 transition-transform transform hover:scale-105 inline-block">
+                    <Link href="/dashboard" className="bg-indigo-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-105 inline-block">
                         Go to Your Dashboard
                     </Link>
                   ) : (

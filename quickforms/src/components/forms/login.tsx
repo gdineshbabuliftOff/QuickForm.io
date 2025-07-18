@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -8,8 +8,9 @@ import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, User }
 import Cookies from 'js-cookie';
 import { auth } from '@/lib/firebase';
 import { getUserDocument, updateUserDocument } from '@/lib/db';
+import { useAuth } from '@/hooks/useAuth';
+import { useModal } from '@/context/ModalContext';
 import { AuthLayout } from './AuthLayout';
-import RedirectModal from '../modals/PricingModal';
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string()
@@ -22,48 +23,46 @@ const LoginSchema = Yup.object().shape({
 const LoginPage = () => {
     const router = useRouter();
     const [apiError, setApiError] = useState<string>('');
-    const [showRedirectModal, setShowRedirectModal] = useState(false);
-    const [modalContent, setModalContent] = useState({ title: '', message: '', buttonText: '', redirectPath: '' });
+    const { user, loading } = useAuth();
+    const { showModal } = useModal();
+
+    useEffect(() => {
+        if (!loading && user) {
+            router.push('/dashboard');
+        }
+    }, [user, loading, router]);
 
     const navigateTo = (path: string) => {
         router.push(path);
     };
 
-    const handleSuccessfulSignIn = async (user: User) => {
-        const token = await user.getIdToken();
+    const handleSuccessfulSignIn = async (loggedInUser: User) => {
+        const token = await loggedInUser.getIdToken();
         const userDetails = {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
+            uid: loggedInUser.uid,
+            email: loggedInUser.email,
+            displayName: loggedInUser.displayName,
         };
 
         localStorage.setItem('userDetails', JSON.stringify(userDetails));
         Cookies.set('firebaseIdToken', token, { expires: 1 });
 
-        // Fetch user document to check premium status
-        const userDoc = await getUserDocument(user.uid);
-        const isPremium = userDoc?.isPremium || false; // Default to false if not set
+        const userDoc = await getUserDocument(loggedInUser.uid);
+        const isPremium = userDoc?.isPremium || false;
 
         if (isPremium) {
-            setModalContent({
+            showModal({
                 title: 'Welcome Back!',
                 message: 'You are a premium user. Redirecting to your dashboard.',
-                buttonText: 'Go to Dashboard',
-                redirectPath: '/dashboard'
+                onCloseRedirectPath: '/dashboard'
             });
         } else {
-            setModalContent({
+            showModal({
                 title: 'Welcome!',
                 message: 'You are currently on the free plan. Upgrade to unlock more features!',
-                buttonText: 'View Pricing Plans',
-                redirectPath: '/pricing'
+                onCloseRedirectPath: '/pricing'
             });
         }
-        setShowRedirectModal(true);
-    };
-
-    const handleModalRedirect = () => {
-        router.push(modalContent.redirectPath);
     };
 
     const handleGoogleSignIn = async () => {
@@ -71,17 +70,20 @@ const LoginPage = () => {
         try {
             const provider = new GoogleAuthProvider();
             const result = await signInWithPopup(auth, provider);
-            const user = result.user;
+            const loggedInUser = result.user;
 
-            // Use the reusable function to update the user document
-            await updateUserDocument(user); // This will fetch/create and update if necessary
+            await updateUserDocument(loggedInUser);
 
-            await handleSuccessfulSignIn(user);
+            await handleSuccessfulSignIn(loggedInUser);
         } catch (error: any) {
             console.error("Google Sign-In Error:", error);
             setApiError(error.message || 'Failed to sign in with Google.');
         }
     };
+
+    if (loading || user) {
+        return null;
+    }
 
     return (
         <AuthLayout>
@@ -117,12 +119,11 @@ const LoginPage = () => {
                     setApiError('');
                     try {
                         const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-                        const user = userCredential.user;
+                        const loggedInUser = userCredential.user;
                         
-                        // Use the reusable function here as well
-                        await updateUserDocument(user); // This will fetch/create and update if necessary
+                        await updateUserDocument(loggedInUser);
                         
-                        await handleSuccessfulSignIn(user);
+                        await handleSuccessfulSignIn(loggedInUser);
 
                     } catch (err: any) {
                         setApiError(err.message);
@@ -155,15 +156,6 @@ const LoginPage = () => {
             <p className="text-center text-gray-600 mt-6">
                 Don&apos;t have an account? <button onClick={() => navigateTo('/signup')} className="text-indigo-600 hover:underline font-medium cursor-pointer">Sign Up</button>
             </p>
-
-            <RedirectModal
-                isOpen={showRedirectModal}
-                onClose={() => setShowRedirectModal(false)}
-                title={modalContent.title}
-                message={modalContent.message}
-                buttonText={modalContent.buttonText}
-                onButtonClick={handleModalRedirect}
-            />
         </AuthLayout>
     );
 };
