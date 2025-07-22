@@ -2,7 +2,7 @@
 
 ::-webkit-scrollbar {
     width: 2px;          /* vertical */
-    height: 2px;         /* horizontal */
+    height: 4px;         /* horizontal */
 }
 
 ::-webkit-scrollbar-track {

@@ -48,19 +48,17 @@ const LoginPage = () => {
         Cookies.set('firebaseIdToken', token, { expires: 1 });
 
         const userDoc = await getUserDocument(loggedInUser.uid);
-        const isPremium = userDoc?.isPremium || false;
+        const tier = userDoc?.subscriptionTier;
 
-        if (isPremium) {
-            showModal({
-                title: 'Welcome Back!',
-                message: 'You are a premium user. Redirecting to your dashboard.',
-                onCloseRedirectPath: '/dashboard'
-            });
+        if (tier === 'pro' || tier === 'premium') {
+            router.push('/dashboard');
         } else {
+            // Pass the user's subscription tier to the modal
             showModal({
-                title: 'Welcome!',
+                title: 'Welcome Back! �',
                 message: 'You are currently on the free plan. Upgrade to unlock more features!',
-                onCloseRedirectPath: '/pricing'
+                onCloseRedirectPath: '/pricing',
+                subscriptionTier: tier || 'free',
             });
         }
     };
@@ -73,11 +71,17 @@ const LoginPage = () => {
             const loggedInUser = result.user;
 
             await updateUserDocument(loggedInUser);
-
+            
             await handleSuccessfulSignIn(loggedInUser);
         } catch (error: any) {
             console.error("Google Sign-In Error:", error);
-            setApiError(error.message || 'Failed to sign in with Google.');
+            let errorMessage = 'Failed to sign in with Google. Please try again.';
+            if (error.code === 'auth/popup-closed-by-user') {
+                errorMessage = 'Google sign-in popup was closed.';
+            } else if (error.code === 'auth/cancelled-popup-request') {
+                errorMessage = 'Google sign-in was cancelled.';
+            }
+            setApiError(errorMessage);
         }
     };
 
@@ -126,7 +130,16 @@ const LoginPage = () => {
                         await handleSuccessfulSignIn(loggedInUser);
 
                     } catch (err: any) {
-                        setApiError(err.message);
+                        console.error("Email/Password Sign-In Error:", err);
+                        let errorMessage = 'Login failed. Please check your credentials.';
+                        if (err.code === 'auth/invalid-email' || err.code === 'auth/user-not-found') {
+                            errorMessage = 'No user found with this email.';
+                        } else if (err.code === 'auth/wrong-password') {
+                            errorMessage = 'Incorrect password.';
+                        } else if (err.code === 'auth/too-many-requests') {
+                            errorMessage = 'Too many failed login attempts. Please try again later.';
+                        }
+                        setApiError(errorMessage);
                     }
                     setSubmitting(false);
                 }}

@@ -1,5 +1,5 @@
-// src/app/api/stats/route.ts
-import { db, auth } from '@/lib/firebaseAdmin';
+
+import { auth, db } from '@/lib/firebaseAdmin';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
@@ -12,25 +12,25 @@ export async function GET(req: NextRequest) {
         const decodedToken = await auth.verifyIdToken(token);
         const { uid } = decodedToken;
 
-        const formsSnapshot = await db.collection('users').doc(uid).collection('forms').get();
+        const formsRef = db.collection('users').doc(uid).collection('forms');
+        const formsSnapshot = await formsRef.get();
         
-        // The .size property will correctly be 0 if the collection doesn't exist or is empty.
         const totalForms = formsSnapshot.size;
-        
-        // If there are no forms, submissions and conversion rate are also 0.
-        const totalSubmissions = 0;
-        const conversionRate = '0.0%';
-        
-        // In a real app, you would calculate actual submissions here.
-        // For now, we return 0 if there are no forms.
-        const finalSubmissions = totalForms > 0 ? Math.floor(Math.random() * 10000) : totalSubmissions;
-        const finalConversion = totalForms > 0 ? `${(Math.random() * (75 - 40) + 40).toFixed(1)}%` : conversionRate;
+        let totalSubmissions = 0;
 
+        // Iterate over each form to count its submissions
+        for (const formDoc of formsSnapshot.docs) {
+            const submissionsSnapshot = await formDoc.ref.collection('submissions').get();
+            totalSubmissions += submissionsSnapshot.size;
+        }
+        
+        // Placeholder for conversion rate logic. You might calculate this based on form views vs submissions.
+        const conversionRate = totalForms > 0 ? '42.3%' : '0.0%';
 
         return NextResponse.json({
             totalForms,
-            totalSubmissions: finalSubmissions.toLocaleString(),
-            conversionRate: finalConversion,
+            totalSubmissions: totalSubmissions.toLocaleString(),
+            conversionRate,
         });
     } catch (error: any) {
         console.error('Error fetching stats:', error.message);

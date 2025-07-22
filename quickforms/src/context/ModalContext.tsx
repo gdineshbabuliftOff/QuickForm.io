@@ -1,14 +1,14 @@
-// context/ModalContext.tsx
 "use client";
 
 import React, { createContext, useContext, useState, FC, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import PricingModal from '@/components/modals/PricingModal';
+import RedirectModal from '@/components/modals/PricingModal';
 
 interface ModalContent {
   title: string;
   message: string;
-  onCloseRedirectPath?: string; // Path to redirect to when modal closes
+  onCloseRedirectPath?: string;
+  subscriptionTier?: 'free' | 'pro' | 'premium';
 }
 
 interface ModalContextType {
@@ -30,7 +30,6 @@ export const ModalProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const hideModal = useCallback(() => {
     setIsOpen(false);
-    // Handle redirection after modal closes
     if (modalContent.onCloseRedirectPath) {
       router.push(modalContent.onCloseRedirectPath);
     }
@@ -39,12 +38,13 @@ export const ModalProvider: FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <ModalContext.Provider value={{ showModal, hideModal }}>
       {children}
-      <PricingModal
+      <RedirectModal
         isOpen={isOpen}
         onClose={hideModal}
         title={modalContent.title}
         message={modalContent.message}
         onCloseRedirectPath={modalContent.onCloseRedirectPath}
+        subscriptionTier={modalContent.subscriptionTier}
       />
     </ModalContext.Provider>
   );

@@ -7,6 +7,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from '@/lib/firebase';
+import { checkUserExistsByEmail } from '@/lib/db';
 
 const ForgotPasswordSchema = Yup.object().shape({
   email: Yup.string()
@@ -38,10 +39,35 @@ const ForgotPasswordPage = () => {
                     setApiError('');
                     setApiSuccess('');
                     try {
-                        await sendPasswordResetEmail(auth, values.email);
-                        setApiSuccess('Password reset link sent! Please check your email.');
-                    } catch (err: any) {
-                        setApiError(err.message);
+                        const emailToProcess = values.email.toLowerCase();
+                        const emailExists = await checkUserExistsByEmail(emailToProcess);
+
+                        if (emailExists) {
+                            await sendPasswordResetEmail(auth, values.email);
+                            setApiSuccess('Password reset link sent! Please check your email.');
+                        } else {
+                            setApiError('No account is associated with this email address.');
+                        }
+
+                    } catch (err: unknown) {
+                        console.error("Password Reset Error:", err);
+                        let errorMessage: string = 'Failed to process your request.';
+
+                        if (typeof err === 'object' && err !== null && 'code' in err) {
+                            const errorCode = (err as { code: string }).code;
+                            if (errorCode === 'functions/invalid-argument') {
+                                errorMessage = 'Please provide a valid email address.';
+                            } else if (errorCode === 'functions/internal') {
+                                errorMessage = 'An internal server error occurred. Please try again later.';
+                            } else if (errorCode === 'auth/network-request-failed') {
+                                errorMessage = 'Network error. Please check your internet connection.';
+                            } else if (errorCode === 'functions/unavailable') {
+                                errorMessage = 'Service is temporarily unavailable. Please try again later.';
+                            }
+                        } else if (err instanceof Error) {
+                            errorMessage = err.message;
+                        }
+                        setApiError(errorMessage);
                     }
                     setSubmitting(false);
                 }}

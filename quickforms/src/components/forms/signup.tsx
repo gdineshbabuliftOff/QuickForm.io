@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, updateProfile, User } from "firebase/auth";
 import Cookies from 'js-cookie';
 import { auth } from '@/lib/firebase';
-import { updateUserDocument, getUserDocument } from '@/lib/db';
+import { updateUserDocument } from '@/lib/db';
 import { useAuth } from '@/hooks/useAuth';
 import { useModal } from '@/context/ModalContext';
 import { AuthLayout } from './AuthLayout';
@@ -27,10 +27,12 @@ const SignupSchema = Yup.object().shape({
 
 const SignupPage = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [apiError, setApiError] = useState<string>('');
-    const [apiSuccess, setApiSuccess] = useState<string>('');
     const { user, loading } = useAuth();
     const { showModal } = useModal();
+
+    const plan = searchParams?.get('plan');
 
     useEffect(() => {
         if (!loading && user) {
@@ -53,11 +55,16 @@ const SignupPage = () => {
         localStorage.setItem('userDetails', JSON.stringify(userDetails));
         Cookies.set('firebaseIdToken', token, { expires: 1 });
 
-        showModal({
-            title: 'Welcome to QuickForm!',
-            message: 'Your account has been created. You are currently on the free plan. Explore our pricing for more features!',
-            onCloseRedirectPath: '/pricing'
-        });
+        if (plan === 'pro') {
+            router.push('/payment');
+        } else {
+            showModal({
+                title: 'Welcome to QuickForm! 🎉',
+                message: 'Your account has been created. You are currently on the free plan.',
+                onCloseRedirectPath: '/pricing',
+                subscriptionTier: 'free', // Pass the tier to the modal
+            });
+        }
     };
 
     const handleGoogleSignIn = async () => {
@@ -67,13 +74,20 @@ const SignupPage = () => {
             const result = await signInWithPopup(auth, provider);
             const signedUpUser = result.user;
 
-            await updateUserDocument(signedUpUser);
-
+            await updateUserDocument(signedUpUser, { subscriptionTier: 'free' });
             await handleSuccessfulSignIn(signedUpUser);
 
         } catch (error: any) {
             console.error("Google Sign-In Error:", error);
-            setApiError(error.message || 'Failed to sign up with Google.');
+            let errorMessage = 'Failed to sign up with Google. Please try again.';
+            if (error.code === 'auth/popup-closed-by-user') {
+                errorMessage = 'Google sign-in popup was closed.';
+            } else if (error.code === 'auth/cancelled-popup-request') {
+                errorMessage = 'Google sign-in was cancelled.';
+            } else if (error.code === 'auth/email-already-in-use') {
+                errorMessage = 'This email is already associated with an account. Please log in.';
+            }
+            setApiError(errorMessage);
         }
     };
 
@@ -87,7 +101,6 @@ const SignupPage = () => {
             <p className="text-gray-600 mb-6">Join QuickForm and start building powerful forms today.</p>
 
             {apiError && <p className="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-center">{apiError}</p>}
-            {apiSuccess && <p className="bg-green-100 text-green-700 p-3 rounded-lg mb-4 text-center">{apiSuccess}</p>}
 
             <button
                 type="button"
@@ -98,7 +111,7 @@ const SignupPage = () => {
                     <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039L38.804 9.81C34.553 5.822 29.553 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"></path>
                     <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039L38.804 9.81C34.553 5.822 29.553 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"></path>
                     <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"></path>
-                    <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19-5.238C42.012 35.245 44 30.028 44 24c0-1.341-.138-2.65-.389-3.917z"></path>
+                    <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.012 35.245 44 30.028 44 24c0-1.341-.138-2.65-.389-3.917z"></path>
                 </svg>
                 Continue with Google
             </button>
@@ -114,7 +127,6 @@ const SignupPage = () => {
                 validationSchema={SignupSchema}
                 onSubmit={async (values, { setSubmitting }) => {
                     setApiError('');
-                    setApiSuccess('');
                     try {
                         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
                         const signedUpUser = userCredential.user;
@@ -123,13 +135,20 @@ const SignupPage = () => {
                             displayName: values.name
                         });
 
-                        await updateUserDocument(signedUpUser, { name: values.name });
-
-                        setApiSuccess('Signup successful! Redirecting...');
+                        await updateUserDocument(signedUpUser, { displayName: values.name, subscriptionTier: 'free' });
                         await handleSuccessfulSignIn(signedUpUser);
 
                     } catch (err: any) {
-                        setApiError(err.message);
+                        console.error("Email/Password Sign-Up Error:", err);
+                        let errorMessage = 'Signup failed.';
+                        if (err.code === 'auth/email-already-in-use') {
+                            errorMessage = 'This email is already in use. Please log in instead.';
+                        } else if (err.code === 'auth/weak-password') {
+                            errorMessage = 'Password is too weak. Please choose a stronger password.';
+                        } else if (err.code === 'auth/invalid-email') {
+                            errorMessage = 'Invalid email address.';
+                        }
+                        setApiError(errorMessage);
                     }
                     setSubmitting(false);
                 }}

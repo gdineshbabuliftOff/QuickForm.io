@@ -1,3 +1,5 @@
+'use client';
+
 import ResetPasswordPage from '@/components/forms/reset-password'
 import QuickFormLoader from '@/components/loaders/quickFormloader';
 import { useAuth } from '@/hooks/useAuth';

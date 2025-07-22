@@ -4,11 +4,12 @@ import React, { useState, useEffect, useRef, FC, ReactNode, JSX } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import QuickFormVideo from '@/components/videos/QuickForm';
-import { useAuth } from '@/hooks/useAuth'; // Import the auth hook
-import { auth } from '@/lib/firebase'; // Import firebase auth for logout
+import { useAuth } from '@/hooks/useAuth';
+import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { useModal } from '@/context/ModalContext'; // Import useModal
+import { useModal } from '@/context/ModalContext';
+import { getUserDocument } from '@/lib/db'; // Import the function to get user data
 
 interface IconProps {
   color?: string;
@@ -172,8 +173,7 @@ const HorizontalScrollSection: FC = () => {
 
 export default function App(): JSX.Element {
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
-  // Destructure isPremium from useAuth
-  const { user, loading, isPremium } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const { showModal } = useModal();
 
@@ -192,29 +192,54 @@ export default function App(): JSX.Element {
     };
   }, []);
 
-  // Removed the duplicate routing logic from here.
-  // The global routing is now handled solely by the useAuth hook.
-
   useEffect(() => {
-    // Ensure window is defined for localStorage access and that auth loading is complete
-    if (typeof window !== 'undefined' && !loading) {
-      const lastVisitDate = localStorage.getItem('lastVisitDate');
-      const today = new Date().toDateString();
+    if (typeof window === 'undefined' || loading) {
+      return;
+    }
 
-      // Condition to show modal:
-      // 1. It's the first visit of the day OR
-      // 2. User is logged in AND is NOT premium
-      if (lastVisitDate !== today || (user && isPremium !== null && !isPremium)) {
+    const thirtyMinutesInMs = 30 * 60 * 1000; 
+
+    const checkAndShowModal = async () => {
+      // Only proceed if there is a logged-in user
+      if (!user) return;
+
+      const userDoc = await getUserDocument(user.uid);
+      const currentTier = userDoc?.subscriptionTier || 'free';
+      
+      // The main condition: only show the modal for 'free' users
+      if (currentTier !== 'free') {
+        return;
+      }
+
+      const lastVisitTimestamp = localStorage.getItem('lastVisitTimestamp');
+      const now = Date.now();
+      const lastVisitTime = lastVisitTimestamp ? parseInt(lastVisitTimestamp) : 0; 
+      const shouldShowForTime = !lastVisitTimestamp || (now - lastVisitTime > thirtyMinutesInMs);
+      
+      if (shouldShowForTime) {
         showModal({
           title: 'Welcome to QuickForm.io!',
-          message: user && !isPremium ? 'Upgrade your plan to unlock more features!' : 'Discover our powerful features and flexible pricing plans.',
-          onCloseRedirectPath: undefined, // No specific redirect on close for home page
+          message: 'Upgrade your plan to unlock more features!',
+          onCloseRedirectPath: undefined,
+          subscriptionTier: 'free', // Pass the tier so the modal knows the context
         });
-        localStorage.setItem('lastVisitDate', today);
+        
+        localStorage.setItem('lastVisitTimestamp', now.toString());
       }
-    }
-  }, [loading, user, isPremium, showModal]); // Added isPremium to dependency array
+    };
 
+    // Set up an interval to run the check periodically
+    const intervalId = setInterval(checkAndShowModal, thirtyMinutesInMs);
+    
+    // Run the check once when the component mounts and user is loaded
+    if (!loading && user) {
+        checkAndShowModal();
+    }
+
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(intervalId);
+
+  }, [loading, user, showModal]);
 
   const features: Feature[] = [
     { id: 'feature-builder', icon: <MousePointerClickIcon className="h-8 w-8 text-indigo-400" />, title: 'Intuitive Drag & Drop Builder', description: "Create any form you can imagine. Just drag, drop, and you're done. No code required, ever." },

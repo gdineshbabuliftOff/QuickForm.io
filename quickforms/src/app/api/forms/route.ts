@@ -1,6 +1,7 @@
-import { db, auth } from '@/lib/firebaseAdmin';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { DocumentData, Timestamp } from 'firebase-admin/firestore';
+import { auth, db } from '@/lib/firebaseAdmin';
 
 export async function GET(req: NextRequest) {
     try {
@@ -17,36 +18,30 @@ export async function GET(req: NextRequest) {
             return NextResponse.json([]);
         }
 
-        const forms = formsSnapshot.docs.map((doc: DocumentData) => ({ id: doc.id, ...doc.data() }));
-        const submissionsSnapshot = await db.collection('submissions').where('userId', '==', uid).get();
-        const submissions = submissionsSnapshot.docs.map(doc => doc.data());
+        // Use Promise.all to fetch submission counts for all forms concurrently
+        const formsWithSubmissions = await Promise.all(
+            formsSnapshot.docs.map(async (doc: DocumentData) => {
+                const form = { id: doc.id, ...doc.data() };
 
-        const submissionCounts = submissions.reduce((acc, submission) => {
-            const formId = submission.formId;
-            if (formId) {
-                acc[formId] = (acc[formId] || 0) + 1;
-            }
-            return acc;
-        }, {} as Record<string, number>);
+                // Get the count of documents in the 'submissions' subcollection for each form
+                const submissionsSnapshot = await doc.ref.collection('submissions').get();
+                const submissionCount = submissionsSnapshot.size;
 
-        const formsWithSubmissions = forms.map((form: any) => {
-            let formattedCreatedAt = '';
-            if (form.createdAt instanceof Timestamp) {
-                formattedCreatedAt = form.createdAt.toDate().toLocaleDateString();
-            } else if (form.createdAt instanceof Date) {
-                formattedCreatedAt = form.createdAt.toLocaleDateString();
-            } else {
-                console.warn(`Unexpected type for createdAt for form ${form.id}:`, typeof form.createdAt);
-                formattedCreatedAt = 'N/A';
-            }
+                let formattedCreatedAt = 'N/A';
+                if (form.createdAt instanceof Timestamp) {
+                    formattedCreatedAt = form.createdAt.toDate().toLocaleDateString();
+                } else if (form.createdAt instanceof Date) {
+                    formattedCreatedAt = form.createdAt.toLocaleDateString();
+                }
 
-            return {
-                ...form,
-                submissions: submissionCounts[form.id] || 0,
-                status: form.status || 'Active',
-                createdAt: formattedCreatedAt,
-            };
-        });
+                return {
+                    ...form,
+                    submissions: submissionCount,
+                    status: form.status || 'Active',
+                    createdAt: formattedCreatedAt,
+                };
+            })
+        );
 
         return NextResponse.json(formsWithSubmissions);
     } catch (error: any) {

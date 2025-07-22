@@ -10,12 +10,15 @@
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.5.0",
     "firebase": "^11.10.0",
     "js-cookie": "^3.0.5",
     "next": "15.3.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "recharts": "^3.0.2"
+    "recharts": "^3.0.2",
+    "stripe": "^18.3.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

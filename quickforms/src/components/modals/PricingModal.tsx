@@ -1,14 +1,15 @@
-// components/modals/RedirectModal.tsx
+"use client";
+
 import React, { FC, useEffect, useState } from 'react';
 import Link from 'next/link';
 
 interface RedirectModalProps {
   isOpen: boolean;
-  onClose: () => void; // This onClose will now trigger the conditional redirect
+  onClose: () => void;
   title: string;
   message: string;
-  // New prop to indicate if closing the modal should redirect to a specific path
   onCloseRedirectPath?: string;
+  subscriptionTier?: 'free' | 'pro' | 'premium';
 }
 
 interface PricingTierProps {
@@ -19,9 +20,9 @@ interface PricingTierProps {
   isHighlighted?: boolean;
   buttonText: string;
   buttonLink: string;
+  isDisabled?: boolean;
 }
 
-// Minimal XIcon for the modal's close button
 const XIcon: FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -48,16 +49,20 @@ const PricingTier: React.FC<PricingTierProps> = ({
   isHighlighted,
   buttonText,
   buttonLink,
+  isDisabled,
 }) => {
   const highlightClasses = isHighlighted
     ? 'bg-indigo-700 border-indigo-500 shadow-xl'
     : 'bg-gray-800/50 border-white/10';
-  const buttonClasses = isHighlighted
+  const buttonClasses = isDisabled
+    ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+    : isHighlighted
     ? 'bg-white text-indigo-600 hover:bg-gray-200'
     : 'bg-indigo-600 text-white hover:bg-indigo-500';
+  const tierWrapperClasses = isDisabled ? 'opacity-60' : '';
 
   return (
-    <div className={`flex flex-col p-6 rounded-xl border transition-all duration-300 ${highlightClasses}`}>
+    <div className={`flex flex-col p-6 rounded-xl border transition-all duration-300 ${highlightClasses} ${tierWrapperClasses}`}>
       <h3 className="text-xl font-bold text-white mb-1">{name}</h3>
       <p className="text-gray-400 text-md">{frequency}</p>
       <div className="flex items-baseline my-4">
@@ -74,7 +79,7 @@ const PricingTier: React.FC<PricingTierProps> = ({
           </li>
         ))}
       </ul>
-      <Link href={buttonLink} className={`block w-full text-center py-2 rounded-lg font-semibold transition-colors duration-200 ${buttonClasses}`}>
+      <Link href={isDisabled ? '#' : buttonLink} className={`block w-full text-center py-2 rounded-lg font-semibold transition-colors duration-200 ${buttonClasses}`}>
         {buttonText}
       </Link>
     </div>
@@ -82,7 +87,7 @@ const PricingTier: React.FC<PricingTierProps> = ({
 };
 
 
-const RedirectModal: FC<RedirectModalProps> = ({ isOpen, onClose, title, message, onCloseRedirectPath }) => {
+const RedirectModal: FC<RedirectModalProps> = ({ isOpen, onClose, title, message, onCloseRedirectPath, subscriptionTier }) => {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -101,7 +106,6 @@ const RedirectModal: FC<RedirectModalProps> = ({ isOpen, onClose, title, message
     ${show ? 'opacity-100' : 'opacity-0 pointer-events-none'}
   `;
 
-  // Increased max-width to max-w-5xl for a "big" modal
   const contentClasses = `
     bg-gray-800 rounded-2xl p-8 max-w-5xl w-full border border-white/10 text-center
     shadow-2xl relative overflow-hidden
@@ -110,19 +114,31 @@ const RedirectModal: FC<RedirectModalProps> = ({ isOpen, onClose, title, message
   `;
 
   const handleCloseClick = () => {
-    setShow(false); // Start fade out animation
-    // After animation, call the onClose prop which might handle redirection
+    setShow(false);
     setTimeout(() => {
       onClose();
-    }, 300); // Match duration-300 for transition-opacity
+    }, 300);
   };
+
+  // Logic to determine props for each tier based on the user's subscription
+  let freeProps = { buttonText: 'Your Current Plan', buttonLink: '#', isDisabled: true };
+  let proProps = { buttonText: 'Upgrade to Pro', buttonLink: '/payment', isDisabled: false };
+  let businessProps = { buttonText: 'Contact Sales', buttonLink: '/contact', isDisabled: false };
+
+  if (subscriptionTier === 'pro') {
+      proProps = { buttonText: 'Your Current Plan', buttonLink: '#', isDisabled: true };
+      businessProps = { buttonText: 'Upgrade to Business', buttonLink: '/contact', isDisabled: false };
+  } else if (subscriptionTier === 'premium') {
+      proProps = { ...proProps, isDisabled: true };
+      businessProps = { buttonText: 'Your Current Plan', buttonLink: '#', isDisabled: true };
+  }
 
   return (
     <div className={modalClasses} onClick={handleCloseClick}>
       <div className={contentClasses} onClick={(e) => e.stopPropagation()}>
         <button
           onClick={handleCloseClick}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors p-1 rounded-full"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors p-1 rounded-full cursor-pointer"
           aria-label="Close modal"
         >
           <XIcon className="w-6 h-6" />
@@ -131,7 +147,7 @@ const RedirectModal: FC<RedirectModalProps> = ({ isOpen, onClose, title, message
         <h3 className="text-2xl font-bold text-white mb-4">{title}</h3>
         <p className="text-gray-400 mb-6">{message}</p>
 
-        <div className="grid md:grid-cols-3 gap-6 mt-8"> {/* Adjusted grid for 3 columns */}
+        <div className="grid md:grid-cols-3 gap-6 mt-8">
           <PricingTier
             name="Free"
             price="Free"
@@ -140,13 +156,10 @@ const RedirectModal: FC<RedirectModalProps> = ({ isOpen, onClose, title, message
               '5 Forms',
               '100 Submissions/month',
               'Basic Templates',
-              'Email Support',
               'Standard Fields',
-              'Basic Analytics',
+              'Email Support',
             ]}
-            buttonText="Current Plan"
-            buttonLink="/dashboard"
-            isHighlighted={false}
+            {...freeProps}
           />
           <PricingTier
             name="Pro"
@@ -158,13 +171,11 @@ const RedirectModal: FC<RedirectModalProps> = ({ isOpen, onClose, title, message
               'Premium Templates',
               'Advanced Fields',
               'Conditional Logic',
-              'Custom CSS',
               'API Integrations',
               'Priority Support',
             ]}
             isHighlighted={true}
-            buttonText="Upgrade to Pro"
-            buttonLink="/pricing?plan=pro"
+            {...proProps}
           />
           <PricingTier
             name="Business"
@@ -176,11 +187,9 @@ const RedirectModal: FC<RedirectModalProps> = ({ isOpen, onClose, title, message
               'Team Collaboration',
               'Custom Domain',
               'Advanced Analytics',
-              'Dedicated Account Manager',
               'SAML SSO',
             ]}
-            buttonText="Contact Sales"
-            buttonLink="/contact"
+            {...businessProps}
           />
         </div>
 
